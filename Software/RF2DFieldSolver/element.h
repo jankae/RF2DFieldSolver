@@ -28,6 +28,7 @@ public:
     const QList<QPointF>& getVertices() const {return vertices;}
     void addVertex(int index, QPointF vertex);
     void appendVertex(QPointF vertex);
+    void removeVertex(int index);
     void changeVertex(int index, QPointF newCoords);
 
     void setName(QString s) {name = s;}

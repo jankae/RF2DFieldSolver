@@ -15,7 +15,8 @@ SOURCES += \
     elementlist.cpp \
     main.cpp \
     mainwindow.cpp \
-    unit.cpp
+    unit.cpp \
+    util.cpp
 
 HEADERS += \
     CustomWidgets/pcbview.h \
@@ -23,7 +24,8 @@ HEADERS += \
     element.h \
     elementlist.h \
     mainwindow.h \
-    unit.h
+    unit.h \
+    util.h
 
 FORMS += \
     mainwindow.ui

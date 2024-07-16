@@ -32,36 +32,42 @@ MainWindow::MainWindow(QWidget *parent)
     auto addMenu = new QMenu();
     auto addRF = new QAction("Trace");
     connect(addRF, &QAction::triggered, [=](){
-        list->addElement(new Element(Element::Type::Trace));
+        auto e = new Element(Element::Type::Trace);
+        list->addElement(e);
+        ui->view->startAppending(e);
     });
     addMenu->addAction(addRF);
     auto addDielectric = new QAction("Dielectric");
     connect(addDielectric, &QAction::triggered, [=](){
-        list->addElement(new Element(Element::Type::Dielectric));
+        auto e = new Element(Element::Type::Dielectric);
+        list->addElement(e);
+        ui->view->startAppending(e);
     });
     addMenu->addAction(addDielectric);
-    auto addGND = new QAction("Trace");
+    auto addGND = new QAction("GND");
     connect(addGND, &QAction::triggered, [=](){
-        list->addElement(new Element(Element::Type::GND));
+        auto e = new Element(Element::Type::GND);
+        list->addElement(e);
+        ui->view->startAppending(e);
     });
     addMenu->addAction(addGND);
     ui->add->setMenu(addMenu);
 
-    auto trace = new Element(Element::Type::Trace);
-    trace->appendVertex(QPointF(-2, 0));
-    trace->appendVertex(QPointF(1, 0));
-    trace->appendVertex(QPointF(1, 0.2));
-    trace->appendVertex(QPointF(-1, 0.2));
+//    auto trace = new Element(Element::Type::Trace);
+//    trace->appendVertex(QPointF(-2, 0));
+//    trace->appendVertex(QPointF(1, 0));
+//    trace->appendVertex(QPointF(1, 0.2));
+//    trace->appendVertex(QPointF(-1, 0.2));
 
-    list->addElement(trace);
+//    list->addElement(trace);
 
-    auto gnd = new Element(Element::Type::GND);
-    gnd->appendVertex(QPointF(-5, 0));
-    gnd->appendVertex(QPointF(5, 0));
-    gnd->appendVertex(QPointF(5, -0.5));
-    gnd->appendVertex(QPointF(-5, -0.5));
+//    auto gnd = new Element(Element::Type::GND);
+//    gnd->appendVertex(QPointF(-5, 0));
+//    gnd->appendVertex(QPointF(5, 0));
+//    gnd->appendVertex(QPointF(5, -0.5));
+//    gnd->appendVertex(QPointF(-5, -0.5));
 
-    list->addElement(gnd);
+//    list->addElement(gnd);
 }
 
 MainWindow::~MainWindow()

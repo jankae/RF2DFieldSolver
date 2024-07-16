@@ -53,6 +53,13 @@ void Element::appendVertex(QPointF vertex)
     vertices.append(vertex);
 }
 
+void Element::removeVertex(int index)
+{
+    if(index >= 0 && index < vertices.size()) {
+        vertices.removeAt(index);
+    }
+}
+
 void Element::changeVertex(int index, QPointF newCoords)
 {
     if(index >= 0 && index < vertices.size()) {
