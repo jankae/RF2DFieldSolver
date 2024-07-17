@@ -1,10 +1,11 @@
-#ifndef PCBVIEW_H
+﻿#ifndef PCBVIEW_H
 #define PCBVIEW_H
 
 #include <QWidget>
 
 #include <QPointF>
 #include "elementlist.h"
+#include "laplace/laplace.h"
 
 class PCBView : public QWidget
 {
@@ -14,8 +15,17 @@ public:
 
     void setCorners(QPointF topLeft, QPointF bottomRight);
     void setElementList(ElementList *list);
+    void setLaplace(Laplace *laplace);
 
     void startAppending(Element *e);
+    void setGrid(double grid);
+    void setShowGrid(bool show);
+    void setSnapToGrid(bool snap);
+    void setShowPotential(bool show);
+
+    QPointF getTopLeft() const;
+
+    QPointF getBottomRight() const;
 
 signals:
 
@@ -31,9 +41,11 @@ private:
     static const QColor GNDColor;
     static const QColor traceColor;
     static const QColor dielectricColor;
+    static const QColor gridColor;
     static constexpr int vertexSize = 10;
     static constexpr int vertexCatchRadius = 15;
     double getPixelDistanceToVertex(QPoint cursor, QPointF vertex);
+    void someElementChanged();
 
     using VertexInfo = struct {
         Element *e;
@@ -51,6 +63,7 @@ private:
     QPointF bottomRight;
     QTransform transform;
     ElementList *list;
+    Laplace *laplace;
 
     Element *appendElement;
     VertexInfo dragVertex;
@@ -58,6 +71,12 @@ private:
     QPoint pressCoords;
     QPoint lastMouseCoords;
     bool pressCoordsValid;
+
+    QPointF snapToGridPoint(const QPointF &pos);
+    double grid;
+    bool showGrid;
+    bool snapToGrid;
+    bool showPotential;
 };
 
 #endif // PCBVIEW_H

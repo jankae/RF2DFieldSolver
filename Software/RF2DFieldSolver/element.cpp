@@ -73,3 +73,13 @@ void Element::setType(Type t)
     emit typeChanged();
 }
 
+QPolygonF Element::toPolygon()
+{
+    auto ret = QPolygonF(vertices);
+//    if(vertices.size() > 2) {
+//        // QPolygon expects the last point to be the same as the first
+//        ret << vertices[0];
+//    }
+    return ret;
+}
+

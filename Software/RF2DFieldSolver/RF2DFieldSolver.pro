@@ -13,8 +13,13 @@ SOURCES += \
     CustomWidgets/siunitedit.cpp \
     element.cpp \
     elementlist.cpp \
+    gauss/gauss.cpp \
+    laplace/laplace.cpp \
+    laplace/lattice.c \
+    laplace/worker.c \
     main.cpp \
     mainwindow.cpp \
+    polygon.cpp \
     unit.cpp \
     util.cpp
 
@@ -23,11 +28,18 @@ HEADERS += \
     CustomWidgets/siunitedit.h \
     element.h \
     elementlist.h \
+    gauss/gauss.h \
+    laplace/laplace.h \
+    laplace/lattice.h \
+    laplace/tuple.h \
+    laplace/worker.h \
     mainwindow.h \
+    polygon.h \
     unit.h \
     util.h
 
 FORMS += \
+    CustomWidgets/vertexEditDialog.ui \
     mainwindow.ui
 
 # Default rules for deployment.

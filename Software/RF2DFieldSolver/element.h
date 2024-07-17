@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QList>
 #include <QPointF>
+#include <QPolygonF>
 
 class Element : public QObject
 {
@@ -34,6 +35,7 @@ public:
     void setName(QString s) {name = s;}
     void setType(Type t);
     void setEpsilonR(double er) {epsilon_r = er;}
+    QPolygonF toPolygon();
 
 signals:
     void typeChanged();

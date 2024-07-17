@@ -29,3 +29,16 @@ double Util::distanceToLine(QPointF point, QPointF l1, QPointF l2, QPointF *clos
     }
     return orthVect.length();
 }
+
+QColor Util::getIntensityGradeColor(double intensity)
+{
+    if(intensity < 0.0) {
+        return Qt::black;
+    } else if(intensity > 1.0) {
+        return Qt::white;
+    } else if(intensity >= 0.0 && intensity <= 1.0) {
+        return QColor::fromHsv(Util::Scale<double>(intensity, 0.0, 1.0, 240, 0), 255, 255);
+    } else {
+        return Qt::black;
+    }
+}

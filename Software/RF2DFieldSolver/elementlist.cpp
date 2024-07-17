@@ -61,6 +61,28 @@ Element *ElementList::elementAt(int index) const
     }
 }
 
+double ElementList::getDielectricConstantAt(const QPointF &p)
+{
+    for(unsigned int i=0;i<elements.size();i++) {
+        auto e = elements[i];
+        QPolygonF poly = QPolygonF(e->getVertices());
+        if(poly.containsPoint(p, Qt::OddEvenFill)) {
+            // this polygon defines the weight at these coordinates
+            switch(e->getType()) {
+            case Element::Type::GND:
+            case Element::Type::Trace:
+                return 1.0;
+            case Element::Type::Dielectric:
+                return e->getEpsilonR();
+            case Element::Type::Last:
+                return 1.0;
+            }
+        }
+    }
+    // not found, we are in the air
+    return 1.0;
+}
+
 QVariant ElementList::data(const QModelIndex &index, int role) const
 {
     auto row = index.row();

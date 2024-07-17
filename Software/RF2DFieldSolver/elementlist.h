@@ -33,6 +33,7 @@ public:
     bool removeElement(int index, bool del = true);
     Element *elementAt(int index) const;
     const QList<Element*> getElements() const {return elements;}
+    double getDielectricConstantAt(const QPointF &p);
 
     int rowCount(const QModelIndex &parent) const override { Q_UNUSED(parent) return elements.size();}
     int columnCount(const QModelIndex &parent) const override {Q_UNUSED(parent) return (int) Column::Last;}

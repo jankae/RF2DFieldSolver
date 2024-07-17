@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1031</width>
-    <height>656</height>
+    <width>996</width>
+    <height>714</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -82,8 +82,109 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="title">
+            <string>PCB Area/Grid</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_3">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>X left:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>X right:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="SIUnitEdit" name="xleft"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="SIUnitEdit" name="xright"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Y top:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>Y bottom:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="SIUnitEdit" name="ytop"/>
+            </item>
+            <item row="3" column="1">
+             <widget class="SIUnitEdit" name="ybottom"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Grid size:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>Show grid:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Snap to grid:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="SIUnitEdit" name="gridsize"/>
+            </item>
+            <item row="6" column="1">
+             <widget class="QCheckBox" name="showGrid">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QCheckBox" name="snapGrid">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Show potential:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QCheckBox" name="showPotential">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
          <item>
           <widget class="QGroupBox" name="groupBox_4">
            <property name="title">
@@ -121,6 +222,20 @@
              <widget class="QSpinBox" name="threads">
               <property name="minimum">
                <number>1</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Border is GND:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="borderIsGND">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>
@@ -207,7 +322,10 @@
       </widget>
       <widget class="QPlainTextEdit" name="status">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </widget>
@@ -219,7 +337,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1031</width>
+     <width>996</width>
      <height>22</height>
     </rect>
    </property>
