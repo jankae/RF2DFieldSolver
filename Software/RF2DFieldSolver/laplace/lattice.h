@@ -2,6 +2,7 @@
 #define INCLUDE_LATTICE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "tuple.h"
 #include "worker.h"
@@ -85,6 +86,10 @@ struct lattice {
      * for each of the cell.
      */
     double (**update)(struct lattice*, struct cell*);
+    /**
+     * Set this to true if all threads should abort their calculation as soon as possible
+     */
+    bool abort;
 };
 
 /**
@@ -177,7 +182,7 @@ uint32_t lattice_compute(struct lattice* lattice, double threshold);
  *
  * @return The number of iterations.
  */
-uint32_t lattice_compute_threaded(struct lattice* lattice, struct config* conf);
+uint32_t lattice_compute_threaded(struct lattice* lattice, struct config* conf, progress_callback_t cb, void *cb_ptr);
 
 #ifdef __cplusplus
 }

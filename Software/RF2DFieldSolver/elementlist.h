@@ -5,6 +5,7 @@
 #include <QList>
 #include <QStyledItemDelegate>
 #include "element.h"
+#include "savable.h"
 
 class TypeDelegate : public QStyledItemDelegate
 {
@@ -15,11 +16,14 @@ class TypeDelegate : public QStyledItemDelegate
     void setModelData(QWidget * editor, QAbstractItemModel * model, const QModelIndex & index) const override;
 };
 
-class ElementList : public QAbstractTableModel
+class ElementList : public QAbstractTableModel, public Savable
 {
     Q_OBJECT
 public:
     explicit ElementList(QObject *parent = nullptr);
+
+    virtual nlohmann::json toJSON() override;
+    virtual void fromJSON(nlohmann::json j) override;
 
     enum class Column {
         Name,

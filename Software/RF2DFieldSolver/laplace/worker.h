@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+typedef void (*progress_callback_t)(void *ptr, double current_diff);
+
 #include "lattice.h"
 #include "tuple.h"
 
@@ -22,10 +24,13 @@ struct worker {
     pthread_spinlock_t lock, listLock;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
+
+    progress_callback_t cb;
+    void *cb_ptr;
 };
 
 struct worker*
-worker_new(struct worker* next, struct lattice* lattice, struct config* conf);
+worker_new(struct worker* next, struct lattice* lattice, struct config* conf, progress_callback_t cb, void *cb_ptr);
 
 void worker_delete(struct worker* worker);
 void* work(void* ptr);

@@ -13,6 +13,39 @@ Element::Element(Type type)
     }
 }
 
+nlohmann::json Element::toJSON()
+{
+    nlohmann::json j;
+    j["name"] = name.toStdString();
+    j["type"] = TypeToString(type).toStdString();
+    j["e_r"] = epsilon_r;
+    nlohmann::json jvertices;
+    for(auto &v : vertices) {
+        nlohmann::json jvertex;
+        jvertex["x"] = v.x();
+        jvertex["y"] = v.y();
+        jvertices.push_back(jvertex);
+    }
+    j["vertices"] = jvertices;
+    return j;
+}
+
+void Element::fromJSON(nlohmann::json j)
+{
+    name = QString::fromStdString(j.value("name", name.toStdString()));
+    type = TypeFromString(QString::fromStdString(j.value("type", "")));
+    epsilon_r = j.value("e_r", epsilon_r);
+    vertices.clear();
+    if(j.contains("vertices")) {
+        for(auto jvertex : j["vertices"]) {
+            QPointF p;
+            p.rx() = jvertex.value("x", 0.0);
+            p.ry() = jvertex.value("y", 0.0);
+            vertices.push_back(p);
+        }
+    }
+}
+
 QString Element::TypeToString(Type type)
 {
     switch(type) {

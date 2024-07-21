@@ -34,6 +34,7 @@ public:
 signals:
     void percentage(int percent);
     void calculationDone();
+    void calculationAborted();
     void info(QString info);
     void warning(QString warning);
     void error(QString error);
@@ -52,6 +53,10 @@ private:
     static void* calcThreadTrampoline(void *ptr) {
         return ((Laplace*)ptr)->calcThread();
     }
+    void calcProgressFromDiff(double diff);
+    static void calcProgressFromDiffTrampoline(void *ptr, double diff) {
+        ((Laplace*)ptr)->calcProgressFromDiff(diff);
+    }
     bool calculationRunning;
     bool resultReady;
     ElementList *list;
@@ -62,6 +67,7 @@ private:
     bool groundedBorders;
     bool ignoreDielectric;
     struct lattice *lattice;
+    int lastPercent;
 
     pthread_t thread;
 };

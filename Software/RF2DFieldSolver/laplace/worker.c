@@ -6,7 +6,7 @@
 double iterate(struct worker* worker);
 
 struct worker*
-worker_new(struct worker* next, struct lattice* lattice, struct config* conf) {
+worker_new(struct worker* next, struct lattice* lattice, struct config* conf, progress_callback_t cb, void *cb_ptr) {
     struct worker* worker;
     int status;
 
@@ -83,6 +83,8 @@ worker_new(struct worker* next, struct lattice* lattice, struct config* conf) {
     worker->iterations = 0;
     worker->pos.x = 0;
     worker->pos.y = 0;
+    worker->cb = cb;
+    worker->cb_ptr = cb_ptr;
 
     /* start the thread */
     pthread_create(&worker->thread, NULL, &work, (void*) worker);
@@ -119,6 +121,9 @@ void* work(void* ptr) {
     do {
         worker->iterations++;
         diff = iterate(worker);
+        if(worker->cb) {
+            worker->cb(worker->cb_ptr, diff);
+        }
 
         /* safely reset the y position */
         pthread_spin_lock(&worker->lock);
@@ -222,7 +227,12 @@ double iterate(struct worker* worker) {
         if(worker->pos.y == worker->conf.distance
         && worker->id < worker->conf.threads
         && worker->previous->id-1 != worker->id)
-           worker_new(worker, worker->lattice, NULL);
+           worker_new(worker, worker->lattice, NULL, worker->cb, worker->cb_ptr);
+
+        if(lattice->abort) {
+            // abort requested. Just return 0 (indicating no diff, this will also prevent a further iteration)
+            return 0.0;
+        }
 
         /* check if this iteration is finished */
         if(worker->pos.y == h)

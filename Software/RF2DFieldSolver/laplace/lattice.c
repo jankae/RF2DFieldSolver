@@ -64,6 +64,7 @@ struct lattice* lattice_new(struct rect* size, struct point* dim, bound_t func, 
     lattice->dim.y = dim->y;
     lattice->cells = cells;
     lattice->update = update;
+    lattice->abort = false;
 
     /* apply all the steps for finishing the lattice */
     lattice_set_size(lattice, size);
@@ -376,13 +377,13 @@ double lattice_iterate(struct lattice* lattice) {
     return diff;
 }
 
-uint32_t lattice_compute_threaded(struct lattice* lattice, struct config* conf) {
+uint32_t lattice_compute_threaded(struct lattice* lattice, struct config* conf, progress_callback_t cb, void *cb_ptr) {
     struct worker* worker;
     struct worker* next;
     uint32_t iterations = 0;
 
     /* create the first worker and wait */
-    worker = worker_new(NULL, lattice, conf);
+    worker = worker_new(NULL, lattice, conf, cb, cb_ptr);
     pthread_join(worker->thread, NULL);
 
     /* traver the linked list */

@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>996</width>
-    <height>714</height>
+    <height>737</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -295,11 +295,32 @@
              </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="update">
-              <property name="text">
-               <string>Update</string>
+             <widget class="QProgressBar" name="progress">
+              <property name="value">
+               <number>0</number>
               </property>
              </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QPushButton" name="abort">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Abort</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="update">
+                <property name="text">
+                 <string>Update</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
              <spacer name="verticalSpacer">
@@ -348,14 +369,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
    </widget>
-   <widget class="QMenu" name="menuSetup">
-    <property name="title">
-     <string>Setup</string>
-    </property>
-    <addaction name="actionSet_Area"/>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuSetup"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">

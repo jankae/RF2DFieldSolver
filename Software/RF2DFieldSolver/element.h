@@ -5,8 +5,9 @@
 #include <QList>
 #include <QPointF>
 #include <QPolygonF>
+#include "savable.h"
 
-class Element : public QObject
+class Element : public QObject, public Savable
 {
     Q_OBJECT
 public:
@@ -18,6 +19,9 @@ public:
     };
 
     explicit Element(Type type);
+
+    virtual nlohmann::json toJSON() override;
+    virtual void fromJSON(nlohmann::json j) override;
 
     static QString TypeToString(Type type);
     static Type TypeFromString(QString s);

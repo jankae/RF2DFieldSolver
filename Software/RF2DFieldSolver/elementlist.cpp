@@ -8,6 +8,31 @@ ElementList::ElementList(QObject *parent)
 
 }
 
+nlohmann::json ElementList::toJSON()
+{
+    nlohmann::json j;
+    nlohmann::json jelements;
+    for(auto e : elements) {
+        jelements.push_back(e->toJSON());
+    }
+    j["elements"] = jelements;
+    return j;
+}
+
+void ElementList::fromJSON(nlohmann::json j)
+{
+    while(elements.size()) {
+        removeElement(0);
+    }
+    if(j.contains("elements")) {
+        for(auto &jelement : j["elements"]) {
+            auto e = new Element(Element::Type::Dielectric);
+            e->fromJSON(jelement);
+            addElement(e);
+        }
+    }
+}
+
 void ElementList::addElement(Element *e)
 {
     beginInsertRows(QModelIndex(), elements.size(), elements.size());

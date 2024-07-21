@@ -78,6 +78,7 @@ bool Laplace::startCalculation(ElementList *list)
     }
     calculationRunning = true;
     resultReady = false;
+    lastPercent = 0;
     emit info("Laplace calculation starting");
     if(lattice) {
         delete lattice;
@@ -100,9 +101,8 @@ void Laplace::abortCalculation()
     if(!calculationRunning) {
         return;
     }
-    calculationRunning = false;
-    resultReady = false;
-    // TODO stop threads
+    // request abort of calculation
+    lattice->abort = true;
 }
 
 double Laplace::getPotential(const QPointF &p)
@@ -236,10 +236,33 @@ void* Laplace::calcThread()
     }
     conf.distance = lattice->dim.y / threads;
     emit info("Starting calculation threads");
-    auto it = lattice_compute_threaded(lattice, &conf);
-    emit info("Laplace calculation complete, took "+QString::number(it)+" iterations");
+    auto it = lattice_compute_threaded(lattice, &conf, calcProgressFromDiffTrampoline, this);
     calculationRunning = false;
-    resultReady = true;
-    emit calculationDone();
+    if(lattice->abort) {
+        emit warning("Laplace calculation aborted");
+        resultReady = false;
+        emit percentage(0);
+        emit calculationAborted();
+    } else {
+        emit info("Laplace calculation complete, took "+QString::number(it)+" iterations");
+        resultReady = true;
+        emit percentage(100);
+        emit calculationDone();
+    }
     return nullptr;
+}
+
+void Laplace::calcProgressFromDiff(double diff)
+{
+    // diff is expected to go down from 1.0 to the threshold with exponetial decay
+    double endTime = pow(-log(threshold), 6);
+    double currentTime = pow(-log(diff), 6);
+    double percent = currentTime * 100 / endTime;
+    if(percent > 100) {
+        percent = 100;
+    } else if(percent < lastPercent) {
+        percent = lastPercent;
+    }
+    lastPercent = percent;
+    emit percentage(percent);
 }
