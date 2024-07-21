@@ -166,11 +166,9 @@ struct rect Laplace::coordToRect(const QPointF &pos)
     return ret;
 }
 
-bound *Laplace::boundaryTrampoline(bound *bound, rect *pos)
+bound *Laplace::boundary(bound *bound, rect *pos)
 {
     auto coord = coordFromRect(pos);
-//    qDebug() << pos->x << pos->y;
-//    qDebug() << coord;
     bound->value = 0;
     bound->cond = NONE;
 
@@ -184,9 +182,12 @@ bound *Laplace::boundaryTrampoline(bound *bound, rect *pos)
     } else {
         // find the matching polygon
         for(auto e : list->getElements()) {
+            if(e->getType() == Element::Type::Dielectric) {
+                // skip, dielectric has no influence on boundary and trace/GND should always take priority
+                continue;
+            }
             QPolygonF poly = e->toPolygon();
             if(poly.containsPoint(coord, Qt::OddEvenFill)) {
-//                qDebug() << "in polygon";
                 // this polygon defines the boundary at these coordinates
                 switch(e->getType()) {
                 case Element::Type::GND:

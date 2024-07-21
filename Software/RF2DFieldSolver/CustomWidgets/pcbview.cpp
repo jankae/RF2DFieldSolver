@@ -32,6 +32,7 @@ PCBView::PCBView(QWidget *parent)
     showGrid = false;
     snapToGrid = false;
     showPotential = false;
+    keepAspectRatio = true;
 }
 
 void PCBView::setCorners(QPointF topLeft, QPointF bottomRight)
@@ -79,6 +80,12 @@ void PCBView::setShowPotential(bool show)
     update();
 }
 
+void PCBView::setKeepAspectRatio(bool keep)
+{
+    keepAspectRatio = keep;
+    update();
+}
+
 void PCBView::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
@@ -86,17 +93,26 @@ void PCBView::paintEvent(QPaintEvent *event)
     QPainter p(this);
 
     p.setViewport(0, 0, width(), height());
-    p.fillRect(0, 0, width(), height(), Qt::lightGray);
     // p.setWindow is limited to integers, this implementation works with floating point
     transform = QTransform();
-    transform.scale(p.viewport().width() / (bottomRight.x() - topLeft.x()),
-                    p.viewport().height() / (bottomRight.y() - topLeft.y()));
-    transform.translate(-topLeft.x(), -topLeft.y());
-    //p.setTransform(transform);
+    if(keepAspectRatio) {
+        // figure out which ratio is the limiting factor
+        auto x_ratio = p.viewport().width() / (bottomRight.x() - topLeft.x());
+        auto y_ratio = p.viewport().height() / (bottomRight.y() - topLeft.y());
+        auto ratio = std::min(abs(x_ratio), abs(y_ratio));
+        transform.scale(copysign(ratio, x_ratio), copysign(ratio, y_ratio));
 
-    //p.setWindow(topLeft.x(), topLeft.y(), bottomRight.x() - topLeft.x(), bottomRight.y() - topLeft.y());
-  //  transform = p.combinedTransform();
+        auto above = (topLeft.y() - bottomRight.y()) * (abs(y_ratio) / ratio - 1) / 2;
+        auto left = (topLeft.x() - bottomRight.x()) * (abs(x_ratio) / ratio - 1) / 2;
 
+        transform.translate(-topLeft.x() - left, -topLeft.y() - above);
+    } else {
+        transform.scale(p.viewport().width() / (bottomRight.x() - topLeft.x()),
+                        p.viewport().height() / (bottomRight.y() - topLeft.y()));
+        transform.translate(-topLeft.x(), -topLeft.y());
+    }
+
+    p.fillRect(QRectF(transform.map(topLeft), transform.map(bottomRight)), Qt::lightGray);
     p.setBackground(QBrush(Qt::black));
 
     // show potential field
@@ -117,13 +133,15 @@ void PCBView::paintEvent(QPaintEvent *event)
         // x axis
         p.setPen(gridColor);
         for(double x = snapToGridPoint(topLeft).x(); x < bottomRight.x(); x += grid) {
-            auto mapped_x = transform.map(QPointF(x, 0)).x();
-            p.drawLine(mapped_x, 0, mapped_x, height());
+            auto top = transform.map(QPointF(x, topLeft.y()));
+            auto bottom = transform.map(QPointF(x, bottomRight.y()));
+            p.drawLine(top, bottom);
         }
         // y axis
         for(double y = snapToGridPoint(bottomRight).y(); y < topLeft.y(); y += grid) {
-            auto mapped_y = transform.map(QPointF(0, y)).y();
-            p.drawLine(0, mapped_y, width(), mapped_y);
+            auto left = transform.map(QPointF(topLeft.x(), y));
+            auto right = transform.map(QPointF(bottomRight.x(), y));
+            p.drawLine(left, right);
         }
     }
 

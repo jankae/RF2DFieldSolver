@@ -22,6 +22,7 @@ public:
     void setShowGrid(bool show);
     void setSnapToGrid(bool snap);
     void setShowPotential(bool show);
+    void setKeepAspectRatio(bool keep);
 
     QPointF getTopLeft() const;
 
@@ -77,6 +78,7 @@ private:
     bool showGrid;
     bool snapToGrid;
     bool showPotential;
+    bool keepAspectRatio;
 };
 
 #endif // PCBVIEW_H

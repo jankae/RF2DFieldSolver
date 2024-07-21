@@ -12,6 +12,9 @@ SOURCES += \
     CustomWidgets/informationbox.cpp \
     CustomWidgets/pcbview.cpp \
     CustomWidgets/siunitedit.cpp \
+    Scenarios/microstrip.cpp \
+    Scenarios/scenario.cpp \
+    Scenarios/stripline.cpp \
     element.cpp \
     elementlist.cpp \
     gauss/gauss.cpp \
@@ -29,6 +32,9 @@ HEADERS += \
     CustomWidgets/informationbox.h \
     CustomWidgets/pcbview.h \
     CustomWidgets/siunitedit.h \
+    Scenarios/microstrip.h \
+    Scenarios/scenario.h \
+    Scenarios/stripline.h \
     element.h \
     elementlist.h \
     gauss/gauss.h \
@@ -46,6 +52,7 @@ HEADERS += \
 
 FORMS += \
     CustomWidgets/vertexEditDialog.ui \
+    Scenarios/scenario.ui \
     mainwindow.ui
 
 # Default rules for deployment.

@@ -42,9 +42,9 @@ signals:
 private:
     QPointF coordFromRect(struct rect *pos);
     struct rect coordToRect(const QPointF &pos);
-    bound* boundaryTrampoline(struct bound* bound, struct rect* pos);
+    bound* boundary(struct bound* bound, struct rect* pos);
     static struct bound* boundaryTrampoline(void *ptr, struct bound* bound, struct rect* pos) {
-        return ((Laplace*)ptr)->boundaryTrampoline(bound, pos);
+        return ((Laplace*)ptr)->boundary(bound, pos);
     }
     static double weightTrampoline(void *ptr, struct rect* pos) {
         return ((Laplace*)ptr)->weight(pos);

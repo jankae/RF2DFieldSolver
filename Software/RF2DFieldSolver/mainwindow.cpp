@@ -8,6 +8,8 @@
 
 #include "polygon.h"
 
+#include "Scenarios/scenario.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -85,6 +87,10 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->snapGrid->setChecked(true);
 
+    connect(ui->viewMode, &QComboBox::currentIndexChanged, this, [=](){
+        ui->view->setKeepAspectRatio(ui->viewMode->currentIndex() == 0);
+    });
+
     ui->capacitance->setUnit("F");
     ui->capacitance->setPrefixes("fpnum ");
     ui->capacitance->setPrecision(4);
@@ -145,7 +151,6 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // connections for the calculations
-
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::startCalculation);
 
     connect(&laplace, &Laplace::info, this, &MainWindow::info);
@@ -227,6 +232,26 @@ MainWindow::MainWindow(QWidget *parent)
     gnd->appendVertex(QPointF(-3e-3, -0.3e-3));
     list->addElement(gnd);
 
+    auto scenarios = Scenario::createAll();
+    for(auto s : scenarios) {
+        auto action = new QAction(s->getName());
+        ui->menuPredefined_Scenarios->addAction(action);
+        connect(action, &QAction::triggered, this, [=](){
+            s->show();
+        });
+        connect(s, &Scenario::scenarioCreated, this, [=](QPointF topLeft, QPointF bottomRight, ElementList *list){
+            // set up new area
+            ui->xleft->setValue(topLeft.x());
+            ui->xright->setValue(bottomRight.x());
+            ui->ytop->setValue(topLeft.y());
+            ui->ybottom->setValue(bottomRight.y());
+            // switch to the new elements
+            ui->view->setElementList(list);
+            delete this->list;
+            this->list = list;
+            ui->table->setModel(list);
+        });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -247,6 +272,7 @@ nlohmann::json MainWindow::toJSON()
     j["showPotential"] = ui->showPotential->isChecked();
     j["showGrid"] = ui->showGrid->isChecked();
     j["snapToGrid"] = ui->snapGrid->isChecked();
+    j["viewMode"] = ui->viewMode->currentText().toStdString();
     // store simulation parameters
     j["simulationGrid"] = ui->resolution->value();
     j["tolerance"] = ui->tolerance->value();
@@ -269,6 +295,7 @@ void MainWindow::fromJSON(nlohmann::json j)
     ui->showPotential->setChecked(j.value("showPotential", ui->showPotential->isChecked()));
     ui->showGrid->setChecked(j.value("showGrid", ui->showGrid->isChecked()));
     ui->snapGrid->setChecked(j.value("snapToGrid", ui->snapGrid->isChecked()));
+    ui->viewMode->setCurrentText(QString::fromStdString(j.value("viewMode", ui->viewMode->currentText().toStdString())));
     // load simulation parameters
     ui->resolution->setValue(j.value("simulationGrid", ui->resolution->value()));
     ui->tolerance->setValue(j.value("tolerance", ui->tolerance->value()));
@@ -362,6 +389,25 @@ void MainWindow::startCalculation()
             // check for overlap
             if(QPolygonF(e1->getVertices()).intersects(QPolygonF(e2->getVertices()))) {
                 error("Short circuit between RF \""+e2->getName()+"\" and GND \""+e1->getName()+"\"");
+                calculationStopped();
+                return;
+            }
+        }
+    }
+    // check for overlapping/touching RF elements
+    for(unsigned int i=0;i<list->getElements().size();i++) {
+        auto e1 = list->getElements()[i];
+        if(e1->getType() != Element::Type::Trace) {
+            continue;
+        }
+        for(unsigned int j=i+1;j<list->getElements().size();j++) {
+            auto e2 = list->getElements()[j];
+            if(e2->getType() != Element::Type::Trace) {
+                continue;
+            }
+            // check for overlap
+            if(QPolygonF(e1->getVertices()).intersects(QPolygonF(e2->getVertices()))) {
+                error("Traces \""+e2->getName()+"\" and \""+e1->getName()+"\" touch/overlap, this is not supported");
                 calculationStopped();
                 return;
             }
