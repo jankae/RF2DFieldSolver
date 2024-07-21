@@ -13,7 +13,8 @@ class Element : public QObject, public Savable
 public:
     enum class Type {
         Dielectric,
-        Trace,
+        TracePos,
+        TraceNeg,
         GND,
         Last,
     };

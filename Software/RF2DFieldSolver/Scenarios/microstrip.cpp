@@ -27,7 +27,7 @@ ElementList *Microstrip::createScenario()
         ui->ybottom->setValue(-substrate_height-0.1e-3);
     }
 
-    auto trace = new Element(Element::Type::Trace);
+    auto trace = new Element(Element::Type::TracePos);
     trace->appendVertex(QPointF(-width/2, 0));
     trace->appendVertex(QPointF(width/2, 0));
     trace->appendVertex(QPointF(width/2, height));

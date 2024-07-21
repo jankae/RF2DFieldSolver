@@ -194,8 +194,12 @@ bound *Laplace::boundary(bound *bound, rect *pos)
                     bound->value = 0;
                     bound->cond = DIRICHLET;
                     return bound;
-                case Element::Type::Trace:
+                case Element::Type::TracePos:
                     bound->value = 1.0;
+                    bound->cond = DIRICHLET;
+                    return bound;
+                case Element::Type::TraceNeg:
+                    bound->value = -1.0;
                     bound->cond = DIRICHLET;
                     return bound;
                 case Element::Type::Dielectric:

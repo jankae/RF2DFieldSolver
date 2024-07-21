@@ -95,7 +95,8 @@ double ElementList::getDielectricConstantAt(const QPointF &p)
             // this polygon defines the weight at these coordinates
             switch(e->getType()) {
             case Element::Type::GND:
-            case Element::Type::Trace:
+            case Element::Type::TracePos:
+            case Element::Type::TraceNeg:
                 return 1.0;
             case Element::Type::Dielectric:
                 return e->getEpsilonR();

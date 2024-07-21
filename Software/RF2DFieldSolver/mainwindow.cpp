@@ -119,13 +119,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     // connections for adding/removing elements
     auto addMenu = new QMenu();
-    auto addRF = new QAction("Trace");
+    auto addRF = new QAction("Trace (+)");
     connect(addRF, &QAction::triggered, [=](){
-        auto e = new Element(Element::Type::Trace);
+        auto e = new Element(Element::Type::TracePos);
         list->addElement(e);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addRF);
+    auto addRFNeg = new QAction("Trace (-)");
+    connect(addRFNeg, &QAction::triggered, [=](){
+        auto e = new Element(Element::Type::TraceNeg);
+        list->addElement(e);
+        ui->view->startAppending(e);
+    });
+    addMenu->addAction(addRFNeg);
     auto addDielectric = new QAction("Dielectric");
     connect(addDielectric, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::Dielectric);
@@ -161,19 +168,46 @@ MainWindow::MainWindow(QWidget *parent)
         disconnect(&laplace, &Laplace::percentage, this, nullptr);
         disconnect(ui->abort, nullptr, &laplace, nullptr);
 
+        bool differential = false;
+        bool hasRFPos = false;
+        bool hasRFNeg = false;
+        for(auto e : list->getElements()) {
+            if(e->getType() == Element::Type::TracePos) {
+                hasRFPos = true;
+            }
+            if(e->getType() == Element::Type::TraceNeg) {
+                hasRFNeg = true;
+            }
+            if(hasRFNeg && hasRFPos) {
+                differential = true;
+                break;
+            }
+        }
+
         ui->view->update();
         // start gauss calculation
         info("Starting gauss integration for charge without dielectric");
         double chargeSum = 0;
         for(auto e : list->getElements()) {
-            if(e->getType() != Element::Type::Trace) {
-                // ignore
-                continue;
+            switch(e->getType()) {
+            case Element::Type::TracePos:
+                chargeSum += Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value());
+                break;
+            case Element::Type::TraceNeg:
+                chargeSum -= Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value());
+                break;
+            case Element::Type::GND:
+            case Element::Type::Dielectric:
+            case Element::Type::Last:
+                break;
             }
-            chargeSum += Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value());
         }
         info("Air gauss calculation done");
         auto Cair = chargeSum * e0;
+        if(differential) {
+            // double the voltage, half the capacitance
+            Cair /= 2;
+        }
         auto L = 1.0 / (std::pow(2.998e8, 2.0) * Cair);
         ui->inductance->setValue(L);
 
@@ -181,17 +215,32 @@ MainWindow::MainWindow(QWidget *parent)
         info("Starting gauss integration for charge with dielectric");
         chargeSum = 0;
         for(auto e : list->getElements()) {
-            if(e->getType() != Element::Type::Trace) {
-                // ignore
-                continue;
+            switch(e->getType()) {
+            case Element::Type::TracePos:
+                chargeSum += Gauss::getCharge(&laplace, list, e, ui->resolution->value());
+                break;
+            case Element::Type::TraceNeg:
+                chargeSum -= Gauss::getCharge(&laplace, list, e, ui->resolution->value());
+                break;
+            case Element::Type::GND:
+            case Element::Type::Dielectric:
+            case Element::Type::Last:
+                break;
             }
-            chargeSum += Gauss::getCharge(&laplace, list, e, ui->resolution->value());
         }
         info("Dielectric gauss calculation done");
         auto Cdielectric = chargeSum * e0;
+        if(differential) {
+            // double the voltage, half the capacitance
+            Cdielectric /= 2;
+        }
         ui->capacitance->setValue(Cdielectric);
 
         auto impedance = sqrt(ui->inductance->value() / Cdielectric);
+        if(differential) {
+            // impedance per pos/neg trace, total impedance is double the amount
+            impedance *= 2;
+        }
         ui->impedance->setValue(impedance);
 
         // calculation complete
@@ -211,7 +260,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&laplace, &Laplace::calculationAborted, this, calculationAborted);
 
     // create standard elements
-    auto trace = new Element(Element::Type::Trace);
+    auto trace = new Element(Element::Type::TracePos);
     trace->appendVertex(QPointF(-0.15e-3, 0));
     trace->appendVertex(QPointF(0.15e-3, 0));
     trace->appendVertex(QPointF(0.15e-3, 35e-6));
@@ -383,7 +432,7 @@ void MainWindow::startCalculation()
             continue;
         }
         for(auto e2 : list->getElements()) {
-            if(e2->getType() != Element::Type::Trace) {
+            if(e2->getType() != Element::Type::TracePos && e2->getType() != Element::Type::TraceNeg) {
                 continue;
             }
             // check for overlap
@@ -397,12 +446,12 @@ void MainWindow::startCalculation()
     // check for overlapping/touching RF elements
     for(unsigned int i=0;i<list->getElements().size();i++) {
         auto e1 = list->getElements()[i];
-        if(e1->getType() != Element::Type::Trace) {
+        if(e1->getType() != Element::Type::TracePos && e1->getType() != Element::Type::TraceNeg) {
             continue;
         }
         for(unsigned int j=i+1;j<list->getElements().size();j++) {
             auto e2 = list->getElements()[j];
-            if(e2->getType() != Element::Type::Trace) {
+            if(e2->getType() != Element::Type::TracePos && e2->getType() != Element::Type::TraceNeg) {
                 continue;
             }
             // check for overlap

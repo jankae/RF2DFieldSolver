@@ -13,7 +13,8 @@
 
 const QColor PCBView::backgroundColor = Qt::lightGray;
 const QColor PCBView::GNDColor = Qt::black;
-const QColor PCBView::traceColor = Qt::red;
+const QColor PCBView::tracePosColor = Qt::red;
+const QColor PCBView::traceNegColor = Qt::blue;
 const QColor PCBView::dielectricColor = Qt::darkGreen;
 const QColor PCBView::gridColor = Qt::gray;
 
@@ -151,7 +152,8 @@ void PCBView::paintEvent(QPaintEvent *event)
             QColor elementColor;
             switch(e->getType()) {
             case Element::Type::Dielectric: elementColor = dielectricColor; break;
-            case Element::Type::Trace: elementColor = traceColor; break;
+            case Element::Type::TracePos: elementColor = tracePosColor; break;
+            case Element::Type::TraceNeg: elementColor = traceNegColor; break;
             case Element::Type::GND: elementColor = GNDColor; break;
             default: elementColor = Qt::gray; break;
             }

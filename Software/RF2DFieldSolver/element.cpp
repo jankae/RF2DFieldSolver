@@ -6,7 +6,8 @@ Element::Element(Type type)
 {
     epsilon_r = 4.3;
     switch(type) {
-    case Type::Trace: name = "RF"; break;
+    case Type::TracePos: name = "RF+"; break;
+    case Type::TraceNeg: name = "RF-"; break;
     case Type::Dielectric: name = "Substrate"; break;
     case Type::GND: name = "GND"; break;
     case Type::Last: break;
@@ -51,7 +52,8 @@ QString Element::TypeToString(Type type)
     switch(type) {
     case Type::Dielectric: return "Dielectric";
     case Type::GND: return "GND";
-    case Type::Trace: return "Trace";
+    case Type::TracePos: return "Trace+";
+    case Type::TraceNeg: return "Trace-";
     case Type::Last: return "";
     }
     return "";

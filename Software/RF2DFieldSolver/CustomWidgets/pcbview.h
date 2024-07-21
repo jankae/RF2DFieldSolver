@@ -40,7 +40,8 @@ protected:
 private:
     static const QColor backgroundColor;
     static const QColor GNDColor;
-    static const QColor traceColor;
+    static const QColor tracePosColor;
+    static const QColor traceNegColor;
     static const QColor dielectricColor;
     static const QColor gridColor;
     static constexpr int vertexSize = 10;
