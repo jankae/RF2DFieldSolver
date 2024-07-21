@@ -34,7 +34,7 @@ private:
     void calculationStopped();
     Ui::MainWindow *ui;
     ElementList *list;
-    Laplace laplace, laplaceAir;
+    Laplace laplace;
     Gauss gauss;
 };
 #endif // MAINWINDOW_H
