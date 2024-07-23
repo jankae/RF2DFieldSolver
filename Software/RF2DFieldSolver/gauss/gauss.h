@@ -12,7 +12,7 @@ class Gauss : public QObject
 public:
     explicit Gauss(QObject *parent = nullptr);
 
-    static double getCharge(Laplace *laplace, ElementList *list, Element *e, double gridSize);
+    static double getCharge(Laplace *laplace, ElementList *list, Element *e, double gridSize, double distance);
 
 signals:
     void info(QString info);

@@ -31,6 +31,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->resolution->setPrecision(4);
     ui->resolution->setValue(10e-6);
 
+    ui->gaussDistance->setUnit("m");
+    ui->gaussDistance->setPrefixes("um ");
+    ui->gaussDistance->setPrecision(4);
+    ui->gaussDistance->setValue(20e-6);
+
     ui->tolerance->setUnit("V");
     ui->tolerance->setPrefixes("pnum ");
     ui->tolerance->setPrecision(4);
@@ -91,16 +96,30 @@ MainWindow::MainWindow(QWidget *parent)
         ui->view->setKeepAspectRatio(ui->viewMode->currentIndex() == 0);
     });
 
-    ui->capacitance->setUnit("F");
-    ui->capacitance->setPrefixes("fpnum ");
-    ui->capacitance->setPrecision(4);
+    ui->capacitanceP->setUnit("F");
+    ui->capacitanceP->setPrefixes("fpnum ");
+    ui->capacitanceP->setPrecision(4);
 
-    ui->inductance->setUnit("H");
-    ui->inductance->setPrefixes("fpnum ");
-    ui->inductance->setPrecision(4);
+    ui->inductanceP->setUnit("H");
+    ui->inductanceP->setPrefixes("fpnum ");
+    ui->inductanceP->setPrecision(4);
 
-    ui->impedance->setUnit("Ω");
-    ui->impedance->setPrecision(4);
+    ui->impedanceP->setUnit("Ω");
+    ui->impedanceP->setPrecision(4);
+
+    ui->capacitanceN->setUnit("F");
+    ui->capacitanceN->setPrefixes("fpnum ");
+    ui->capacitanceN->setPrecision(4);
+
+    ui->inductanceN->setUnit("H");
+    ui->inductanceN->setPrefixes("fpnum ");
+    ui->inductanceN->setPrecision(4);
+
+    ui->impedanceN->setUnit("Ω");
+    ui->impedanceN->setPrecision(4);
+
+    ui->impedanceDiff->setUnit("Ω");
+    ui->impedanceDiff->setPrecision(4);
 
     // save/load
     connect(ui->actionOpen, &QAction::triggered, this, [=](){
@@ -168,33 +187,17 @@ MainWindow::MainWindow(QWidget *parent)
         disconnect(&laplace, &Laplace::percentage, this, nullptr);
         disconnect(ui->abort, nullptr, &laplace, nullptr);
 
-        bool differential = false;
-        bool hasRFPos = false;
-        bool hasRFNeg = false;
-        for(auto e : list->getElements()) {
-            if(e->getType() == Element::Type::TracePos) {
-                hasRFPos = true;
-            }
-            if(e->getType() == Element::Type::TraceNeg) {
-                hasRFNeg = true;
-            }
-            if(hasRFNeg && hasRFPos) {
-                differential = true;
-                break;
-            }
-        }
-
         ui->view->update();
         // start gauss calculation
         info("Starting gauss integration for charge without dielectric");
-        double chargeSum = 0;
+        double chargeSumP = 0, chargeSumN = 0;
         for(auto e : list->getElements()) {
             switch(e->getType()) {
             case Element::Type::TracePos:
-                chargeSum += Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value());
+                chargeSumP += Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::TraceNeg:
-                chargeSum -= Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value());
+                chargeSumN -= Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::GND:
             case Element::Type::Dielectric:
@@ -203,24 +206,24 @@ MainWindow::MainWindow(QWidget *parent)
             }
         }
         info("Air gauss calculation done");
-        auto Cair = chargeSum * e0;
-        if(differential) {
-            // double the voltage, half the capacitance
-            Cair /= 2;
-        }
-        auto L = 1.0 / (std::pow(2.998e8, 2.0) * Cair);
-        ui->inductance->setValue(L);
+        auto CairP = chargeSumP * e0;
+        auto LP = 1.0 / (std::pow(2.998e8, 2.0) * CairP);
+        ui->inductanceP->setValue(LP);
+
+        auto CairN = chargeSumN * e0;
+        auto LN = 1.0 / (std::pow(2.998e8, 2.0) * CairN);
+        ui->inductanceN->setValue(LN);
 
         // start gauss calculation
         info("Starting gauss integration for charge with dielectric");
-        chargeSum = 0;
+        chargeSumP = 0, chargeSumN = 0;
         for(auto e : list->getElements()) {
             switch(e->getType()) {
             case Element::Type::TracePos:
-                chargeSum += Gauss::getCharge(&laplace, list, e, ui->resolution->value());
+                chargeSumP += Gauss::getCharge(&laplace, list, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::TraceNeg:
-                chargeSum -= Gauss::getCharge(&laplace, list, e, ui->resolution->value());
+                chargeSumN -= Gauss::getCharge(&laplace, list, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::GND:
             case Element::Type::Dielectric:
@@ -229,19 +232,19 @@ MainWindow::MainWindow(QWidget *parent)
             }
         }
         info("Dielectric gauss calculation done");
-        auto Cdielectric = chargeSum * e0;
-        if(differential) {
-            // double the voltage, half the capacitance
-            Cdielectric /= 2;
-        }
-        ui->capacitance->setValue(Cdielectric);
+        auto CdielectricP = chargeSumP * e0;
+        ui->capacitanceP->setValue(CdielectricP);
 
-        auto impedance = sqrt(ui->inductance->value() / Cdielectric);
-        if(differential) {
-            // impedance per pos/neg trace, total impedance is double the amount
-            impedance *= 2;
-        }
-        ui->impedance->setValue(impedance);
+        auto CdielectricN = chargeSumN * e0;
+        ui->capacitanceN->setValue(CdielectricN);
+
+        auto impedanceP = sqrt(ui->inductanceP->value() / CdielectricP);
+        ui->impedanceP->setValue(impedanceP);
+
+        auto impedanceN = sqrt(ui->inductanceN->value() / CdielectricN);
+        ui->impedanceN->setValue(impedanceN);
+
+        ui->impedanceDiff->setValue(ui->impedanceP->value() + ui->impedanceN->value());
 
         // calculation complete
         ui->progress->setValue(100);
@@ -324,6 +327,7 @@ nlohmann::json MainWindow::toJSON()
     j["viewMode"] = ui->viewMode->currentText().toStdString();
     // store simulation parameters
     j["simulationGrid"] = ui->resolution->value();
+    j["gaussDistance"] = ui->gaussDistance->value();
     j["tolerance"] = ui->tolerance->value();
     j["threads"] = ui->threads->value();
     j["borderIsGND"] = ui->borderIsGND->isChecked();
@@ -347,6 +351,7 @@ void MainWindow::fromJSON(nlohmann::json j)
     ui->viewMode->setCurrentText(QString::fromStdString(j.value("viewMode", ui->viewMode->currentText().toStdString())));
     // load simulation parameters
     ui->resolution->setValue(j.value("simulationGrid", ui->resolution->value()));
+    ui->gaussDistance->setValue(j.value("gaussDistance", ui->gaussDistance->value()));
     ui->tolerance->setValue(j.value("tolerance", ui->tolerance->value()));
     ui->threads->setValue(j.value("threads", ui->threads->value()));
     ui->borderIsGND->setChecked(j.value("borderIsGND", ui->borderIsGND->isChecked()));
@@ -402,6 +407,7 @@ void MainWindow::startCalculation()
     ui->ytop->setEnabled(false);
     ui->ybottom->setEnabled(false);
     ui->resolution->setEnabled(false);
+    ui->gaussDistance->setEnabled(false);
     ui->threads->setEnabled(false);
     ui->tolerance->setEnabled(false);
     ui->borderIsGND->setEnabled(false);
@@ -410,9 +416,13 @@ void MainWindow::startCalculation()
 
     // start the calculations
     ui->status->clear();
-    ui->capacitance->setValue(0);
-    ui->inductance->setValue(0);
-    ui->impedance->setValue(0);
+    ui->capacitanceP->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->inductanceP->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->impedanceP->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->capacitanceN->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->inductanceN->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->impedanceN->setValue(std::numeric_limits<double>::quiet_NaN());
+    ui->impedanceDiff->setValue(std::numeric_limits<double>::quiet_NaN());
 
     laplace.invalidateResult();
     ui->view->update();
@@ -523,6 +533,7 @@ void MainWindow::calculationStopped()
     ui->ytop->setEnabled(true);
     ui->ybottom->setEnabled(true);
     ui->resolution->setEnabled(true);
+    ui->gaussDistance->setEnabled(true);
     ui->threads->setEnabled(true);
     ui->tolerance->setEnabled(true);
     ui->borderIsGND->setEnabled(true);

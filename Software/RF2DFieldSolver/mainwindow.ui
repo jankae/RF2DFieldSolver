@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>996</width>
-    <height>737</height>
+    <width>990</width>
+    <height>1089</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -232,33 +232,43 @@
             <item row="1" column="1">
              <widget class="SIUnitEdit" name="tolerance"/>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QLabel" name="label_6">
               <property name="text">
                <string>CPU Threads:</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
+            <item row="3" column="1">
              <widget class="QSpinBox" name="threads">
               <property name="minimum">
                <number>1</number>
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
+            <item row="4" column="0">
              <widget class="QLabel" name="label_15">
               <property name="text">
                <string>Border is GND:</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
+            <item row="4" column="1">
              <widget class="QCheckBox" name="borderIsGND">
               <property name="text">
                <string/>
               </property>
              </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Distance Gauss Integral:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="SIUnitEdit" name="gaussDistance"/>
             </item>
            </layout>
           </widget>
@@ -270,50 +280,104 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <layout class="QFormLayout" name="formLayout">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>δC:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="SIUnitEdit" name="capacitance">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>δL:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="SIUnitEdit" name="inductance">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Impedance:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="SIUnitEdit" name="impedance">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
+             <widget class="QGroupBox" name="groupBox_6">
+              <property name="title">
+               <string>RF+</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout">
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_22">
+                 <property name="text">
+                  <string>RF-</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="SIUnitEdit" name="capacitanceN">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="SIUnitEdit" name="inductanceP">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>δL:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>δC:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_21">
+                 <property name="text">
+                  <string>RF+</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="SIUnitEdit" name="inductanceN">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="SIUnitEdit" name="impedanceN">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="SIUnitEdit" name="impedanceP">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_3">
+                 <property name="text">
+                  <string>Impedance:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="SIUnitEdit" name="capacitanceP">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_19">
+                 <property name="text">
+                  <string>Differential:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1" colspan="2">
+                <widget class="SIUnitEdit" name="impedanceDiff">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </item>
             <item>
              <widget class="QProgressBar" name="progress">
@@ -321,6 +385,19 @@
                <number>0</number>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>56</height>
+               </size>
+              </property>
+             </spacer>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -342,19 +419,6 @@
                </widget>
               </item>
              </layout>
-            </item>
-            <item>
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>56</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>
@@ -379,7 +443,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>996</width>
+     <width>990</width>
      <height>22</height>
     </rect>
    </property>
