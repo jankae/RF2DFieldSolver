@@ -124,10 +124,12 @@ void PCBView::paintEvent(QPaintEvent *event)
                 auto coord = transform.inverted().map(QPointF(i, j));
                 auto v = laplace->getPotential(coord);
                 p.setPen(Util::getIntensityGradeColor(v));
+                p.setOpacity(sqrt(abs(v)));
                 p.drawPoint(i, j);
             }
         }
     }
+    p.setOpacity(1.0);
 
     // draw grid
     if(showGrid) {
