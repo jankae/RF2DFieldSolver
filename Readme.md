@@ -2,6 +2,8 @@
 
 Did you ever route a PCB and needed to figure out how wide a trace needs to be to reach a specific impedance? This tool can calculate that for you.
 
+![](Screenshots/FieldView.png)
+
 I can already imagine the next question:
 ##### But aren't there a lot of free online calculators for that purpose already? Why would I need to simulate this?
 
