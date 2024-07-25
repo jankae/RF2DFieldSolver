@@ -1,20 +1,21 @@
-#ifndef MICROSTRIP_H
-#define MICROSTRIP_H
+#ifndef COPLANARMICROSTRIP_H
+#define COPLANARMICROSTRIP_H
 
 #include "scenario.h"
 
-class Microstrip : public Scenario
+class CoplanarMicrostrip : public Scenario
 {
 public:
-    Microstrip();
+    CoplanarMicrostrip();
 protected:
     virtual ElementList *createScenario() override;
     virtual QPixmap getImage() override;
 private:
     double width;
+    double gap;
     double height;
     double substrate_height;
     double e_r;
 };
 
-#endif // MICROSTRIP_H
+#endif // COPLANARMICROSTRIP_H

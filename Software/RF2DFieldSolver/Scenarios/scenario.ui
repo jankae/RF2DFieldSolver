@@ -17,7 +17,11 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
      <item>
-      <widget class="QWidget" name="image" native="true"/>
+      <widget class="QLabel" name="image">
+       <property name="text">
+        <string>image</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QGroupBox" name="parameters">

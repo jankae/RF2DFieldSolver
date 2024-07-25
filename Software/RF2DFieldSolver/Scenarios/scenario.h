@@ -29,6 +29,7 @@ signals:
 
 protected:
     virtual ElementList *createScenario() = 0;
+    virtual QPixmap getImage() = 0;
 
     using Parameter = struct {
         QString name;

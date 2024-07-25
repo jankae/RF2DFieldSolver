@@ -1,0 +1,55 @@
+\documentclass[convert={convertexe={magick.exe},density=150,outext=.png}]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations,decorations.markings,decorations.text}
+\usepackage{xcolor}
+\definecolor{PCB}{RGB}{132,223,132}
+\definecolor{Trace}{RGB}{255,203,0}
+
+\begin{document}
+ \pgfkeys{/pgf/decoration/.cd,
+      distance/.initial=10pt
+}  
+
+\pgfdeclaredecoration{add dim}{final}{
+\state{final}{% 
+\pgfmathsetmacro{\dist}{5pt*\pgfkeysvalueof{/pgf/decoration/distance}/abs(\pgfkeysvalueof{/pgf/decoration/distance})} 
+          \pgfpathmoveto{\pgfpoint{0pt}{0pt}}             
+          \pgfpathlineto{\pgfpoint{0pt}{2*\dist}}   
+          \pgfpathmoveto{\pgfpoint{\pgfdecoratedpathlength}{0pt}} 
+          \pgfpathlineto{\pgfpoint{(\pgfdecoratedpathlength}{2*\dist}}
+           \pgfusepath{stroke} 
+%          \pgfsetdash{{0.1cm}{0.1cm}{0.1cm}{0.1cm}}{0cm}     
+          \pgfsetarrowsstart{latex}
+          \pgfsetarrowsend{latex}  
+          \pgfpathmoveto{\pgfpoint{0pt}{\dist}}
+          \pgfpathlineto{\pgfpoint{\pgfdecoratedpathlength}{\dist}} 
+          \pgfusepath{stroke} 
+          \pgfsetdash{}{0pt}
+          \pgfpathmoveto{\pgfpoint{0pt}{0pt}}
+          \pgfpathlineto{\pgfpoint{\pgfdecoratedpathlength}{0pt}}
+}}
+
+\tikzset{dim/.style args={#1,#2}{decoration={add dim,distance=#2},
+                decorate,
+                postaction={decorate,decoration={text along path,
+                                                 raise=#2,
+                                                 text align={align=center},
+                                                 text={#1}}}}}
+                                      
+\tikzset{fontscale/.style = {font=\relsize{#1}}
+    }                                      
+                                                 
+\begin{tikzpicture}
+\coordinate (topLeft) at (-4,-2);
+\coordinate (bottomRight) at (4,2);
+\clip (topLeft) rectangle (bottomRight);
+\fill[PCB] (-3,-1) rectangle (3,0);
+\fill[Trace] (-1,0) rectangle (1,0.5);
+\fill[Trace] (-3,-1.5) rectangle (3,-1);
+
+\draw[dim={w,10pt,}, draw=none]  (-1,0.5) --  (1,0.5);
+\draw[dim={t,10pt,}, draw=none]  (-1,0) --  (-1,0.5);
+\draw[dim={h,10pt,}, draw=none]  (-2,-1) --  (-2,0);
+\node at (0,-0.5) {$\epsilon_r$};
+\end{tikzpicture}
+\end{document}

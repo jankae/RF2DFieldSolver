@@ -5,6 +5,8 @@
 
 #include "microstrip.h"
 #include "stripline.h"
+#include "coplanarmicrostrip.h"
+#include "coplanarstripline.h"
 
 Scenario::Scenario(QWidget *parent) :
     QDialog(parent),
@@ -58,6 +60,8 @@ QList<Scenario *> Scenario::createAll()
     QList<Scenario*> ret;
     ret.push_back(new Microstrip());
     ret.push_back(new Stripline());
+    ret.push_back(new CoplanarMicrostrip());
+    ret.push_back(new CoplanarStripline());
 
     for(auto s : ret) {
         s->setupParameters();
@@ -75,4 +79,7 @@ void Scenario::setupParameters()
         layout->addRow(label, entry);
     }
     setWindowTitle(name + " setup dialog");
+
+    // show the image
+    ui->image->setPixmap(getImage());
 }

@@ -12,6 +12,8 @@ SOURCES += \
     CustomWidgets/informationbox.cpp \
     CustomWidgets/pcbview.cpp \
     CustomWidgets/siunitedit.cpp \
+    Scenarios/coplanarmicrostrip.cpp \
+    Scenarios/coplanarstripline.cpp \
     Scenarios/microstrip.cpp \
     Scenarios/scenario.cpp \
     Scenarios/stripline.cpp \
@@ -32,6 +34,8 @@ HEADERS += \
     CustomWidgets/informationbox.h \
     CustomWidgets/pcbview.h \
     CustomWidgets/siunitedit.h \
+    Scenarios/coplanarmicrostrip.h \
+    Scenarios/coplanarstripline.h \
     Scenarios/microstrip.h \
     Scenarios/scenario.h \
     Scenarios/stripline.h \
@@ -59,3 +63,8 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc
+
+DISTFILES +=

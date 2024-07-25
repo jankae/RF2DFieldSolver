@@ -1,0 +1,68 @@
+\documentclass[convert={convertexe={magick.exe},density=150,outext=.png}]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations,decorations.markings,decorations.text}
+\usepackage{xcolor}
+\definecolor{PCB}{RGB}{132,223,132}
+\definecolor{darkerPCB}{RGB}{100,200,100}
+\definecolor{Trace}{RGB}{255,203,0}
+
+\begin{document}
+ \pgfkeys{/pgf/decoration/.cd,
+      distance/.initial=10pt
+}  
+
+\pgfdeclaredecoration{add dim}{final}{
+\state{final}{% 
+\pgfmathsetmacro{\dist}{5pt*\pgfkeysvalueof{/pgf/decoration/distance}/abs(\pgfkeysvalueof{/pgf/decoration/distance})} 
+          \pgfpathmoveto{\pgfpoint{0pt}{0pt}}             
+          \pgfpathlineto{\pgfpoint{0pt}{2*\dist}}   
+          \pgfpathmoveto{\pgfpoint{\pgfdecoratedpathlength}{0pt}} 
+          \pgfpathlineto{\pgfpoint{(\pgfdecoratedpathlength}{2*\dist}}
+           \pgfusepath{stroke} 
+%          \pgfsetdash{{0.1cm}{0.1cm}{0.1cm}{0.1cm}}{0cm}     
+          \pgfsetarrowsstart{latex}
+          \pgfsetarrowsend{latex}  
+          \pgfpathmoveto{\pgfpoint{0pt}{\dist}}
+          \pgfpathlineto{\pgfpoint{\pgfdecoratedpathlength}{\dist}} 
+          \pgfusepath{stroke} 
+          \pgfsetdash{}{0pt}
+          \pgfpathmoveto{\pgfpoint{0pt}{0pt}}
+          \pgfpathlineto{\pgfpoint{\pgfdecoratedpathlength}{0pt}}
+}}
+
+\tikzset{dim/.style args={#1,#2}{decoration={add dim,distance=#2},
+                decorate,
+                postaction={decorate,decoration={text along path,
+                                                 raise=#2,
+                                                 text align={align=center},
+                                                 text={#1}}}}}
+                                      
+\tikzset{fontscale/.style = {font=\relsize{#1}}
+    }                                      
+                                                 
+\begin{tikzpicture}
+\coordinate (topLeft) at (-5,-2);
+\coordinate (bottomRight) at (5,2);
+\clip (topLeft) rectangle (bottomRight);
+\fill[PCB] (-4,-1) rectangle (4,0);
+\fill[PCB] (-4,0) rectangle (4,1);
+\fill[Trace] (-4,-0.25) rectangle (-2.5,0.25);
+\fill[Trace] (-1.5,-0.25) rectangle (-0.5,0.25);
+\fill[Trace] (0.5,-0.25) rectangle (1.5,0.25);
+\fill[Trace] (2.5,-0.25) rectangle (4,0.25);
+\fill[Trace] (-4,-1.5) rectangle (4,-1);
+\fill[Trace] (-4,1) rectangle (4,1.5);
+\draw[darkerPCB] (-4,-0.25) -- (4,-0.25);
+
+\draw[dim={s2,10pt,}, draw=none]  (-2.5,0.25) --  (-1.5,0.25);
+\draw[dim={w,10pt,}, draw=none]  (-1.5,0.25) --  (-0.5,0.25);
+\draw[dim={s1,10pt,}, draw=none]  (-0.5,0.25) --  (0.5,0.25);
+\draw[dim={w,10pt,}, draw=none]  (0.5,0.25) --  (1.5,0.25);
+\draw[dim={s2,10pt,}, draw=none]  (1.5,0.25) --  (2.5,0.25);
+\draw[dim={t,10pt,}, draw=none]  (-1.5,-0.25) --  (-1.5,0.25);
+\draw[dim={h1,10pt,}, draw=none]  (-3,-0.25) --  (-3,1);
+\draw[dim={h2,10pt,}, draw=none]  (-3,-1) --  (-3,-0.25);
+\node at (3.5,0.6) {$\epsilon_r (h1)$};
+\node at (3,-0.6) {$\epsilon_r (h2)$};
+\end{tikzpicture}
+\end{document}
