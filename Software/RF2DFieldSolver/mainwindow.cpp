@@ -262,28 +262,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&laplace, &Laplace::calculationAborted, this, calculationAborted);
 
-    // create standard elements
-    auto trace = new Element(Element::Type::TracePos);
-    trace->appendVertex(QPointF(-0.15e-3, 0));
-    trace->appendVertex(QPointF(0.15e-3, 0));
-    trace->appendVertex(QPointF(0.15e-3, 35e-6));
-    trace->appendVertex(QPointF(-0.15e-3, 35e-6));
-    list->addElement(trace);
-
-    auto substrate = new Element(Element::Type::Dielectric);
-    substrate->appendVertex(QPointF(-3e-3, 0));
-    substrate->appendVertex(QPointF(3e-3, 0));
-    substrate->appendVertex(QPointF(3e-3, -0.2e-3));
-    substrate->appendVertex(QPointF(-3e-3, -0.2e-3));
-    list->addElement(substrate);
-
-    auto gnd = new Element(Element::Type::GND);
-    gnd->appendVertex(QPointF(-3e-3, -0.2e-3));
-    gnd->appendVertex(QPointF(3e-3, -0.2e-3));
-    gnd->appendVertex(QPointF(3e-3, -0.3e-3));
-    gnd->appendVertex(QPointF(-3e-3, -0.3e-3));
-    list->addElement(gnd);
-
     auto scenarios = Scenario::createAll();
     for(auto s : scenarios) {
         auto action = new QAction(s->getName());

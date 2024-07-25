@@ -12,8 +12,12 @@ SOURCES += \
     CustomWidgets/informationbox.cpp \
     CustomWidgets/pcbview.cpp \
     CustomWidgets/siunitedit.cpp \
+    Scenarios/coplanardifferentialmicrostrip.cpp \
+    Scenarios/coplanardifferentialstripline.cpp \
     Scenarios/coplanarmicrostrip.cpp \
     Scenarios/coplanarstripline.cpp \
+    Scenarios/differentialmicrostrip.cpp \
+    Scenarios/differentialstripline.cpp \
     Scenarios/microstrip.cpp \
     Scenarios/scenario.cpp \
     Scenarios/stripline.cpp \
@@ -34,8 +38,12 @@ HEADERS += \
     CustomWidgets/informationbox.h \
     CustomWidgets/pcbview.h \
     CustomWidgets/siunitedit.h \
+    Scenarios/coplanardifferentialmicrostrip.h \
+    Scenarios/coplanardifferentialstripline.h \
     Scenarios/coplanarmicrostrip.h \
     Scenarios/coplanarstripline.h \
+    Scenarios/differentialmicrostrip.h \
+    Scenarios/differentialstripline.h \
     Scenarios/microstrip.h \
     Scenarios/scenario.h \
     Scenarios/stripline.h \

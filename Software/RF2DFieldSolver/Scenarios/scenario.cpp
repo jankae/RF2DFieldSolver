@@ -7,6 +7,10 @@
 #include "stripline.h"
 #include "coplanarmicrostrip.h"
 #include "coplanarstripline.h"
+#include "differentialmicrostrip.h"
+#include "coplanardifferentialmicrostrip.h"
+#include "differentialstripline.h"
+#include "coplanardifferentialstripline.h"
 
 Scenario::Scenario(QWidget *parent) :
     QDialog(parent),
@@ -59,9 +63,13 @@ QList<Scenario *> Scenario::createAll()
 {
     QList<Scenario*> ret;
     ret.push_back(new Microstrip());
-    ret.push_back(new Stripline());
     ret.push_back(new CoplanarMicrostrip());
+    ret.push_back(new DifferentialMicrostrip());
+    ret.push_back(new CoplanarDifferentialMicrostrip());
+    ret.push_back(new Stripline());
     ret.push_back(new CoplanarStripline());
+    ret.push_back(new DifferentialStripline());
+    ret.push_back(new CoplanarDifferentialStripline());
 
     for(auto s : ret) {
         s->setupParameters();
@@ -78,7 +86,7 @@ void Scenario::setupParameters()
         entry->setValue(*p.value);
         layout->addRow(label, entry);
     }
-    setWindowTitle(name + " setup dialog");
+    setWindowTitle(name + " Setup Dialog");
 
     // show the image
     ui->image->setPixmap(getImage());
