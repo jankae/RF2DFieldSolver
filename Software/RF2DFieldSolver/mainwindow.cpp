@@ -96,22 +96,22 @@ MainWindow::MainWindow(QWidget *parent)
         ui->view->setKeepAspectRatio(ui->viewMode->currentIndex() == 0);
     });
 
-    ui->capacitanceP->setUnit("F");
+    ui->capacitanceP->setUnit("F/m");
     ui->capacitanceP->setPrefixes("fpnum ");
     ui->capacitanceP->setPrecision(4);
 
-    ui->inductanceP->setUnit("H");
+    ui->inductanceP->setUnit("H/m");
     ui->inductanceP->setPrefixes("fpnum ");
     ui->inductanceP->setPrecision(4);
 
     ui->impedanceP->setUnit("Ω");
     ui->impedanceP->setPrecision(4);
 
-    ui->capacitanceN->setUnit("F");
+    ui->capacitanceN->setUnit("F/m");
     ui->capacitanceN->setPrefixes("fpnum ");
     ui->capacitanceN->setPrecision(4);
 
-    ui->inductanceN->setUnit("H");
+    ui->inductanceN->setUnit("H/m");
     ui->inductanceN->setPrefixes("fpnum ");
     ui->inductanceN->setPrecision(4);
 
