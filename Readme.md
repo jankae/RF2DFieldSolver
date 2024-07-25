@@ -9,7 +9,7 @@ I can already imagine the next question:
 
 Well yes, but actually no:
 
-- Most available calculators are based on approximate formulas. Change the proportions to a something where these formulas are no longer valid, and you get a wrong result
+- Most available calculators are based on approximate formulas. Change the proportions to something where these formulas are no longer valid, and you get a wrong result
 - The results from several calculators actually differ by a surprising amount (see below)
 - If you have a specific geometry which isn't covered by any of the calculators, you need a field solver. This could for example be gaps in the ground plane or multiple different dielectrics between the trace and the reference plane
 
