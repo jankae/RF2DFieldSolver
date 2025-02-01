@@ -88,10 +88,10 @@ jobs:
           cd Software/RF2DFieldSolver/release
           del *.o *.cpp
           windeployqt.exe .
-          copy ..\..\..\..\..\Qt\6.2.0\mingw81_64\bin\libwinpthread-1.dll .
-          copy ..\..\..\..\..\Qt\6.2.0\mingw81_64\bin\libgcc_s_seh-1.dll .
-          copy "..\..\..\..\..\Qt\6.2.0\mingw81_64\bin\libstdc++-6.dll" .
-          copy ..\..\..\..\..\Qt\6.2.0\mingw81_64\bin\Qt6OpenGL.dll .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\libwinpthread-1.dll .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\libgcc_s_seh-1.dll .
+          copy "..\..\..\..\Qt\6.2.0\mingw81_64\bin\libstdc++-6.dll" .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\Qt6OpenGL.dll .
         shell: cmd
         
       - name: Upload
