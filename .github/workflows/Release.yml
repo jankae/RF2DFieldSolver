@@ -1,0 +1,122 @@
+name: Upload release for tag
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+
+  Ubuntu:
+    runs-on: ubuntu-22.04
+    outputs:
+      upload_url: ${{ steps.bump_release.outputs.upload_url }} 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-tools-dev qt6-base-dev zip
+          qtchooser -install qt6 $(which qmake6)
+
+      - name: Get app version
+        id: id_version
+        run: |
+          cd Software/RF2DFieldSolver
+          fw_major=`grep -oP '(?<=FW_MAJOR=)[0-9]+' RF2DFieldSolver.pro`
+          fw_minor=`grep -oP '(?<=FW_MINOR=)[0-9]+' RF2DFieldSolver.pro`
+          fw_patch=`grep -oP '(?<=FW_PATCH=)[0-9]+' RF2DFieldSolver.pro` 
+          echo "app_version=v$fw_major.$fw_minor.$fw_patch" >> $GITHUB_OUTPUT
+
+      - name: Build application
+        run: |
+          cd Software/RF2DFieldSolver
+          export QT_SELECT=qt6
+          qmake RF2DFieldSolver.pro
+          make -j9
+          zip RF2DFieldSolver.zip RF2DFieldSolver
+        shell: bash
+
+      - name: Bump release page
+        id: bump_release
+        uses: actions/create-release@v1
+        env:
+          FIELDSOLVER_VERSION: "${{steps.id_version.outputs.app_version}}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{env.FIELDSOLVER_VERSION}}
+          release_name: ${{env.FIELDSOLVER_VERSION}}
+          draft: false
+          prerelease: false
+
+      - name: 'Upload release asset'
+        uses: actions/upload-release-asset@v1
+        env:
+          FIELDSOLVER_VERSION: "${{steps.id_version.outputs.app_version}}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.bump_release.outputs.upload_url }}
+          asset_path: ./Software/RF2DFieldSolver/RF2DFieldSolver.zip
+          asset_name: RF2DFieldSolver-Ubuntu-${{env.FIELDSOLVER_VERSION}}.zip
+          asset_content_type: application/tar+gzip
+                   
+  Windows:
+    needs: Ubuntu
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: '6.2.0'
+          arch: 'win64_mingw81'
+      
+      - name: Get app version
+        id: id_version
+        shell: msys2 {0}
+        run: |
+          cd Software/RF2DFieldSolver
+          fw_major=`grep -oP '(?<=FW_MAJOR=)[0-9]+' RF2DFieldSolver.pro`
+          fw_minor=`grep -oP '(?<=FW_MINOR=)[0-9]+' RF2DFieldSolver.pro`
+          fw_patch=`grep -oP '(?<=FW_PATCH=)[0-9]+' RF2DFieldSolver.pro` 
+          echo "app_version=v$fw_major.$fw_minor.$fw_patch" >> $GITHUB_OUTPUT
+
+      - name: Build application
+        run: |
+          cd Software/RF2DFieldSolver
+          qmake RF2DFieldSolver.pro
+          make -j9
+        shell: cmd
+
+      - name: Deploy application
+        run: |
+          cd Software/RF2DFieldSolver/release
+          del *.o *.cpp
+          windeployqt.exe .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\libwinpthread-1.dll .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\libgcc_s_seh-1.dll .
+          copy "..\..\..\..\Qt\6.2.0\mingw81_64\bin\libstdc++-6.dll" .
+          copy ..\..\..\..\Qt\6.2.0\mingw81_64\bin\Qt6OpenGL.dll .
+        shell: cmd
+
+      - name: Zip app
+        shell: cmd
+        env: 
+          FIELDSOLVER_VERSION: "${{steps.id_version.outputs.app_version}}"
+        run: |
+          7z a RF2DFieldSolver_Windows-${{env.FIELDSOLVER_VERSION}}.zip ./Software/RF2DFieldSolver/release
+
+      - name: 'Upload release asset'
+        uses: actions/upload-release-asset@v1
+        env:
+          FIELDSOLVER_VERSION: "${{steps.id_version.outputs.app_version}}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.Ubuntu.outputs.upload_url }}
+          asset_path: ./RF2DFieldSolver_Windows-${{env.FIELDSOLVER_VERSION}}.zip
+          asset_name: RF2DFieldSolver_Windows-${{env.FIELDSOLVER_VERSION}}.zip
+          asset_content_type: application/tar+gzip
+          
