@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  PC_Application_Ubuntu:
+  Ubuntu:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +49,7 @@ jobs:
           name: RF2DFieldSolver-Ubuntu-${{env.FIELDSOLVER_VERSION}}
           path: Software/RF2DFieldSolver/RF2DFieldSolver
           
-  PC_Application_Windows:
+  Windows:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
         id: id_version
         shell: msys2 {0}
         run: |
-          cd Software/PC_Application
+          cd Software/RF2DFieldSolver
           fw_major=`grep -oP '(?<=FW_MAJOR=)[0-9]+' RF2DFieldSolver.pro`
           fw_minor=`grep -oP '(?<=FW_MINOR=)[0-9]+' RF2DFieldSolver.pro`
           fw_patch=`grep -oP '(?<=FW_PATCH=)[0-9]+' RF2DFieldSolver.pro` 
