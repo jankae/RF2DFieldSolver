@@ -8,6 +8,7 @@ on:
 jobs:
 
   Ubuntu:
+    permissions: write-all
     runs-on: ubuntu-22.04
     outputs:
       upload_url: ${{ steps.bump_release.outputs.upload_url }} 
@@ -47,6 +48,8 @@ jobs:
         with:
           tag_name: ${{env.FIELDSOLVER_VERSION}}
           release_name: ${{env.FIELDSOLVER_VERSION}}
+          body: |
+              ${{env.FIELDSOLVER_VERSION}} Release
           draft: false
           prerelease: false
 
