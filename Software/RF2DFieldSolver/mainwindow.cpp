@@ -10,12 +10,18 @@
 
 #include "Scenarios/scenario.h"
 
+static const QString APP_VERSION = QString::number(FW_MAJOR) + "." +
+                                   QString::number(FW_MINOR) + "." +
+                                   QString::number(FW_PATCH);
+static const QString APP_GIT_HASH = QString(GITHASH);
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
+    setWindowTitle(windowTitle() + " "+APP_VERSION+"-"+APP_GIT_HASH.left(9));
 
     auto updateViewArea = [=](){
         ui->view->setCorners(QPointF(ui->xleft->value(), ui->ytop->value()), QPointF(ui->xright->value(), ui->ybottom->value()));

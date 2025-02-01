@@ -72,6 +72,10 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+REVISION = $$system(git rev-parse HEAD)
+DEFINES += GITHASH=\\"\"$$REVISION\\"\"
+DEFINES += FW_MAJOR=1 FW_MINOR=0 FW_PATCH=0
+
 RESOURCES += \
     resources.qrc
 
