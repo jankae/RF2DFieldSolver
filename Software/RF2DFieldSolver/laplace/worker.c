@@ -18,11 +18,14 @@ worker_new(struct worker* next, struct lattice* lattice, struct config* conf, pr
     worker = malloc(sizeof(struct worker));
     if(worker == NULL) goto ERROR1;
 
-    /* initialise the spinlocks */
-    status = pthread_spin_init(&worker->lock, PTHREAD_PROCESS_SHARED);
+    /* initialise the spinlocks (process-private: they are only shared between
+     * threads of this process; PTHREAD_PROCESS_SHARED is rejected by some
+     * pthread implementations, e.g. mingw-w64 winpthreads, which made
+     * worker_new() fail and the solver crash on start) */
+    status = pthread_spin_init(&worker->lock, PTHREAD_PROCESS_PRIVATE);
     if(status != 0) goto ERROR1;
 
-    status = pthread_spin_init(&worker->listLock, PTHREAD_PROCESS_SHARED);
+    status = pthread_spin_init(&worker->listLock, PTHREAD_PROCESS_PRIVATE);
     if(status != 0) goto ERROR2;
 
     /* initialise the mutex */
