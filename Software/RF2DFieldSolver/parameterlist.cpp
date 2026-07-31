@@ -11,6 +11,10 @@
 // Ascending SI prefixes with the base unit (space) in its correct 1e0 position,
 // as required by Unit::ToString. Used to preview evaluated parameter values.
 static const QString VALUE_PREFIXES = "fpnum kMGTP";
+// Geometry parameters are lengths; show the metre unit so the value is
+// unambiguous (e.g. "18.5mm" rather than a bare "18.5m" milli prefix), matching
+// every other length field in the application.
+static const QString VALUE_UNIT = "m";
 
 ParameterList::ParameterList(QObject *parent)
     : QAbstractTableModel{parent}
@@ -149,7 +153,7 @@ QVariant ParameterList::data(const QModelIndex &index, int role) const
                 return QVariant();
             }
             if(p.valid) {
-                return Unit::ToString(p.value, "", VALUE_PREFIXES, 6);
+                return Unit::ToString(p.value, VALUE_UNIT, VALUE_PREFIXES, 4);
             } else if(!p.error.isEmpty()) {
                 return QString("error");
             } else {
