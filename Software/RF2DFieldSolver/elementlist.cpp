@@ -79,7 +79,7 @@ bool ElementList::removeElement(int index, bool del)
 
 Element *ElementList::elementAt(int index) const
 {
-    if (index >= 0 || index < elements.size()) {
+    if (index >= 0 && index < elements.size()) {
         return elements[index];
     } else {
         return nullptr;

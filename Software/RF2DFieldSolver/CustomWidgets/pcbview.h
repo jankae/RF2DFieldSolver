@@ -18,6 +18,8 @@ public:
     void setElementList(ElementList *list);
     void setParameters(ParameterList *params);
     void setLaplace(Laplace *laplace);
+    // Highlights the given element in the view (nullptr clears the highlight).
+    void setSelectedElement(Element *e);
 
     void startAppending(Element *e);
     void setGrid(double grid);
@@ -31,6 +33,8 @@ public:
     QPointF getBottomRight() const;
 
 signals:
+    // Emitted when the user clicks an element in the view (nullptr on empty space).
+    void elementSelected(Element *e);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -63,6 +67,9 @@ private:
     };
     LineInfo catchLine(QPoint cursor);
 
+    // Returns the element under the cursor (vertex, edge or interior), or nullptr.
+    Element *elementAtCursor(QPoint cursor);
+
     QPointF topLeft;
     QPointF bottomRight;
     QTransform transform;
@@ -70,6 +77,7 @@ private:
     ParameterList *params;
     Laplace *laplace;
 
+    Element *selectedElement;
     Element *appendElement;
     VertexInfo dragVertex;
 

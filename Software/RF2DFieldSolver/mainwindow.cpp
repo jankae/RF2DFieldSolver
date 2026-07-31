@@ -5,6 +5,7 @@
 
 #include <QDebug>
 #include <QVector>
+#include <QItemSelectionModel>
 
 #include "polygon.h"
 
@@ -212,9 +213,24 @@ MainWindow::MainWindow(QWidget *parent)
         auto row = ui->table->currentIndex().row();
         if(row >= 0 && row <= list->getElements().size()) {
             list->removeElement(row);
+            ui->view->setSelectedElement(nullptr);
             ui->view->update();
         }
     });
+
+    // clicking an element in the view selects its row in the table
+    connect(ui->view, &PCBView::elementSelected, this, [=](Element *e){
+        if(e) {
+            int row = list->getElements().indexOf(e);
+            if(row >= 0) {
+                ui->table->selectRow(row);
+            }
+        } else {
+            ui->table->clearSelection();
+            ui->view->setSelectedElement(nullptr);
+        }
+    });
+    wireTableSelection();
 
     // connections for the calculations
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::startCalculation);
@@ -317,9 +333,11 @@ MainWindow::MainWindow(QWidget *parent)
             ui->ybottom->setValue(bottomRight.y());
             // switch to the new elements
             ui->view->setElementList(list);
+            ui->view->setSelectedElement(nullptr);
             delete this->list;
             this->list = list;
             ui->table->setModel(list);
+            wireTableSelection();
             refreshGeometry();
         });
     }
@@ -574,6 +592,18 @@ void MainWindow::calculationStopped()
     ui->paramTable->setEnabled(true);
     ui->paramAdd->setEnabled(true);
     ui->paramRemove->setEnabled(true);
+}
+
+void MainWindow::wireTableSelection()
+{
+    connect(ui->table->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
+            [=](const QModelIndex &current, const QModelIndex &){
+        Element *e = nullptr;
+        if(current.isValid() && current.row() < list->getElements().size()) {
+            e = list->elementAt(current.row());
+        }
+        ui->view->setSelectedElement(e);
+    });
 }
 
 void MainWindow::refreshGeometry()

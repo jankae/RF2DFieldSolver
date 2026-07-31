@@ -31,6 +31,7 @@ PCBView::PCBView(QWidget *parent)
     laplace = nullptr;
     topLeft = QPointF(-1, 1);
     topLeft = QPointF(1, -1);
+    selectedElement = nullptr;
     appendElement = nullptr;
     dragVertex.e = nullptr;
     dragVertex.index = 0;
@@ -51,11 +52,21 @@ void PCBView::setCorners(QPointF topLeft, QPointF bottomRight)
 void PCBView::setElementList(ElementList *list)
 {
     this->list = list;
+    // the previous selection belongs to the old list
+    selectedElement = nullptr;
 }
 
 void PCBView::setParameters(ParameterList *params)
 {
     this->params = params;
+}
+
+void PCBView::setSelectedElement(Element *e)
+{
+    if(selectedElement != e) {
+        selectedElement = e;
+        update();
+    }
 }
 
 void PCBView::setLaplace(Laplace *laplace)
@@ -170,10 +181,24 @@ void PCBView::paintEvent(QPaintEvent *event)
             case Element::Type::GND: elementColor = GNDColor; break;
             default: elementColor = Qt::gray; break;
             }
+            auto vertices = e->getVertices();
+
+            // highlight the selected element with a glow drawn behind it
+            if(e == selectedElement && vertices.size() > 1) {
+                QPen glow(QColor(255, 193, 7, 220));   // amber
+                glow.setWidth(4);
+                p.setPen(glow);
+                p.setBrush(Qt::NoBrush);
+                QPolygonF poly;
+                for(auto &v : vertices) {
+                    poly << transform.map(v);
+                }
+                p.drawPolygon(poly);
+            }
+
             p.setBrush(elementColor);
             p.setPen(elementColor);
 
-            auto vertices = e->getVertices();
             // paint vertices in viewport to get constant vertex size
             for(auto v : vertices) {
                 auto devicePoint = transform.map(v);
@@ -227,6 +252,11 @@ void PCBView::mousePressEvent(QMouseEvent *event)
     } else {
         // not appending, may have been a click on a vertex
         dragVertex = catchVertex(event->pos());
+        // update the selection based on what was clicked
+        Element *clicked = dragVertex.e ? dragVertex.e : elementAtCursor(event->pos());
+        selectedElement = clicked;
+        emit elementSelected(clicked);
+        update();
     }
 }
 
@@ -434,6 +464,29 @@ PCBView::LineInfo PCBView::catchLine(QPoint cursor)
         }
     }
     return info;
+}
+
+Element *PCBView::elementAtCursor(QPoint cursor)
+{
+    if(!list) {
+        return nullptr;
+    }
+    // prefer a vertex, then an edge, then the polygon interior
+    auto v = catchVertex(cursor);
+    if(v.e) {
+        return v.e;
+    }
+    auto l = catchLine(cursor);
+    if(l.e) {
+        return l.e;
+    }
+    auto coord = transform.inverted().map(QPointF(cursor));
+    for(auto e : list->getElements()) {
+        if(QPolygonF(e->getVertices()).containsPoint(coord, Qt::OddEvenFill)) {
+            return e;
+        }
+    }
+    return nullptr;
 }
 
 QPointF PCBView::getBottomRight() const

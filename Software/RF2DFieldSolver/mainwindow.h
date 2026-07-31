@@ -36,6 +36,10 @@ private:
     // Re-evaluates all element vertices from the current parameter values and
     // repaints the view. Called whenever a parameter or point changes.
     void refreshGeometry();
+    // Connects the elements table selection to the view highlight. Must be
+    // called again whenever the table's model (and thus its selection model)
+    // is replaced.
+    void wireTableSelection();
     Ui::MainWindow *ui;
     ElementList *list;
     ParameterList *params;
