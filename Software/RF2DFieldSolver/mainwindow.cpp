@@ -224,6 +224,29 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    // duplicate the selected element (handy for e.g. GND on either side of a trace)
+    connect(ui->duplicate, &QPushButton::clicked, this, [=](){
+        auto row = ui->table->currentIndex().row();
+        if(row < 0 || row >= list->getElements().size()) {
+            return;
+        }
+        auto src = list->elementAt(row);
+        auto copy = new Element(src->getType());
+        copy->setName(src->getName() + " copy");
+        copy->setEpsilonR(src->getEpsilonR());
+        QList<QPair<QString, QString>> exprs;
+        for(int i=0;i<src->vertexCount();i++) {
+            exprs.append(src->getVertexExpr(i));
+        }
+        copy->setVertexExpressions(exprs, params->symbols());
+        list->addElement(copy);
+        int newRow = list->getElements().indexOf(copy);
+        if(newRow >= 0) {
+            ui->table->selectRow(newRow);
+        }
+        refreshGeometry();
+    });
+
     // clicking an element in the view selects its row in the table
     connect(ui->view, &PCBView::elementSelected, this, [=](Element *e){
         if(e) {
@@ -464,6 +487,7 @@ void MainWindow::startCalculation()
     ui->borderIsGND->setEnabled(false);
     ui->add->setEnabled(false);
     ui->remove->setEnabled(false);
+    ui->duplicate->setEnabled(false);
     ui->editPoints->setEnabled(false);
     ui->paramTable->setEnabled(false);
     ui->paramAdd->setEnabled(false);
@@ -594,6 +618,7 @@ void MainWindow::calculationStopped()
     ui->borderIsGND->setEnabled(true);
     ui->add->setEnabled(true);
     ui->remove->setEnabled(true);
+    ui->duplicate->setEnabled(true);
     ui->editPoints->setEnabled(true);
     ui->paramTable->setEnabled(true);
     ui->paramAdd->setEnabled(true);
