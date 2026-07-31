@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->resolution->setUnit("m");
     ui->resolution->setPrefixes("um ");
     ui->resolution->setPrecision(4);
-    ui->resolution->setValue(10e-6);
+    ui->resolution->setValue(4e-6);
 
     ui->gaussDistance->setUnit("m");
     ui->gaussDistance->setPrefixes("um ");
