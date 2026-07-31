@@ -22,6 +22,9 @@ public:
     void setSelectedElement(Element *e);
 
     void startAppending(Element *e);
+    // Ends any in-progress click-to-draw session (e.g. when the user switches
+    // to defining points manually via the points dialog).
+    void stopAppending();
     void setGrid(double grid);
     void setShowGrid(bool show);
     void setSnapToGrid(bool snap);

@@ -170,6 +170,8 @@ MainWindow::MainWindow(QWidget *parent)
         if(row < 0 || row >= list->getElements().size()) {
             return;
         }
+        // defining points manually ends any click-to-draw session in progress
+        ui->view->stopAppending();
         auto e = list->elementAt(row);
         PointsEditDialog d(e, params->symbols(), this);
         if(d.exec() == QDialog::Accepted) {
@@ -183,6 +185,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addRF, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::TracePos);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addRF);
@@ -190,6 +193,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addRFNeg, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::TraceNeg);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addRFNeg);
@@ -197,6 +201,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addDielectric, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::Dielectric);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addDielectric);
@@ -204,6 +209,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addGND, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::GND);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addGND);

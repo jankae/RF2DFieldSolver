@@ -80,6 +80,15 @@ void PCBView::startAppending(Element *e)
     setMouseTracking(true);
 }
 
+void PCBView::stopAppending()
+{
+    if(appendElement) {
+        appendElement = nullptr;
+        setMouseTracking(false);
+        update();
+    }
+}
+
 void PCBView::setGrid(double grid)
 {
     this->grid = grid;
@@ -356,7 +365,12 @@ void PCBView::mouseDoubleClickEvent(QMouseEvent *event)
 void PCBView::contextMenuEvent(QContextMenuEvent *event)
 {
     if (appendElement) {
-        // ignore
+        // right-click finishes the current polygon (the shape is implicitly
+        // closed); this gives a clean way to stop adding points instead of
+        // leaving the outline stuck to the cursor
+        appendElement = nullptr;
+        setMouseTracking(false);
+        update();
         return;
     }
     auto menu = new QMenu();
