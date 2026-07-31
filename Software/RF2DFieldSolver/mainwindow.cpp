@@ -8,6 +8,8 @@
 
 #include "polygon.h"
 
+#include "CustomWidgets/pointseditdialog.h"
+
 #include "Scenarios/scenario.h"
 
 static const QString APP_VERSION = QString::number(FW_MAJOR) + "." +
@@ -31,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
     showMaximized();
     ui->splitter->setSizes({1000, 3000, 1000});
     ui->splitter_2->setSizes({5000, 1000});
+    ui->leftSplitter->setSizes({1000, 2000});
 
     ui->resolution->setUnit("m");
     ui->resolution->setPrefixes("um ");
@@ -141,6 +144,37 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table->setItemDelegateForColumn((int) ElementList::Column::Type, new TypeDelegate());
     ui->view->setElementList(list);
     ui->view->setLaplace(&laplace);
+
+    // parameters
+    params = new ParameterList();
+    ui->paramTable->setModel(params);
+    ui->view->setParameters(params);
+    connect(ui->paramAdd, &QPushButton::clicked, this, [=](){
+        params->addParameter();
+    });
+    connect(ui->paramRemove, &QPushButton::clicked, this, [=](){
+        auto row = ui->paramTable->currentIndex().row();
+        if(row >= 0) {
+            params->removeParameter(row);
+        }
+    });
+    // any parameter change re-evaluates the geometry and replots
+    connect(params, &ParameterList::parametersChanged, this, [=](){
+        refreshGeometry();
+    });
+
+    // edit the points of the selected element as expressions
+    connect(ui->editPoints, &QPushButton::clicked, this, [=](){
+        auto row = ui->table->currentIndex().row();
+        if(row < 0 || row >= list->getElements().size()) {
+            return;
+        }
+        auto e = list->elementAt(row);
+        PointsEditDialog d(e, params->symbols(), this);
+        if(d.exec() == QDialog::Accepted) {
+            refreshGeometry();
+        }
+    });
 
     // connections for adding/removing elements
     auto addMenu = new QMenu();
@@ -286,6 +320,7 @@ MainWindow::MainWindow(QWidget *parent)
             delete this->list;
             this->list = list;
             ui->table->setModel(list);
+            refreshGeometry();
         });
     }
 }
@@ -315,6 +350,8 @@ nlohmann::json MainWindow::toJSON()
     j["tolerance"] = ui->tolerance->value();
     j["threads"] = ui->threads->value();
     j["borderIsGND"] = ui->borderIsGND->isChecked();
+    // store parameters
+    j["parameterList"] = params->toJSON();
     // store elements
     j["list"] = list->toJSON();
     return j;
@@ -339,10 +376,16 @@ void MainWindow::fromJSON(nlohmann::json j)
     ui->tolerance->setValue(j.value("tolerance", ui->tolerance->value()));
     ui->threads->setValue(j.value("threads", ui->threads->value()));
     ui->borderIsGND->setChecked(j.value("borderIsGND", ui->borderIsGND->isChecked()));
+    // load parameters before elements so their symbols are available
+    if(j.contains("parameterList")) {
+        params->fromJSON(j["parameterList"]);
+    }
     // load elements
     if(j.contains("list")) {
         list->fromJSON(j["list"]);
     }
+    // resolve element vertices against the loaded parameters
+    list->reevaluateAll(params->symbols());
 }
 
 void MainWindow::info(QString info)
@@ -397,6 +440,10 @@ void MainWindow::startCalculation()
     ui->borderIsGND->setEnabled(false);
     ui->add->setEnabled(false);
     ui->remove->setEnabled(false);
+    ui->editPoints->setEnabled(false);
+    ui->paramTable->setEnabled(false);
+    ui->paramAdd->setEnabled(false);
+    ui->paramRemove->setEnabled(false);
 
     // start the calculations
     ui->status->clear();
@@ -523,5 +570,20 @@ void MainWindow::calculationStopped()
     ui->borderIsGND->setEnabled(true);
     ui->add->setEnabled(true);
     ui->remove->setEnabled(true);
+    ui->editPoints->setEnabled(true);
+    ui->paramTable->setEnabled(true);
+    ui->paramAdd->setEnabled(true);
+    ui->paramRemove->setEnabled(true);
+}
+
+void MainWindow::refreshGeometry()
+{
+    // recompute all element vertices from the current parameter values
+    list->reevaluateAll(params->symbols());
+    // the geometry changed, any previous field solution is no longer valid
+    if(laplace.isResultReady()) {
+        laplace.invalidateResult();
+    }
+    ui->view->update();
 }
 

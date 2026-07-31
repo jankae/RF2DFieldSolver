@@ -86,6 +86,13 @@ Element *ElementList::elementAt(int index) const
     }
 }
 
+void ElementList::reevaluateAll(const QMap<QString, double> &symbols)
+{
+    for(auto e : elements) {
+        e->reevaluate(symbols);
+    }
+}
+
 double ElementList::getDielectricConstantAt(const QPointF &p)
 {
     for(unsigned int i=0;i<elements.size();i++) {

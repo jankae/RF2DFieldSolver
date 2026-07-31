@@ -11,6 +11,7 @@ CONFIG += c++11
 SOURCES += \
     CustomWidgets/informationbox.cpp \
     CustomWidgets/pcbview.cpp \
+    CustomWidgets/pointseditdialog.cpp \
     CustomWidgets/siunitedit.cpp \
     Scenarios/coplanardifferentialmicrostrip.cpp \
     Scenarios/coplanardifferentialstripline.cpp \
@@ -23,6 +24,8 @@ SOURCES += \
     Scenarios/stripline.cpp \
     element.cpp \
     elementlist.cpp \
+    expression.cpp \
+    parameterlist.cpp \
     gauss/gauss.cpp \
     laplace/laplace.cpp \
     laplace/lattice.c \
@@ -37,6 +40,7 @@ SOURCES += \
 HEADERS += \
     CustomWidgets/informationbox.h \
     CustomWidgets/pcbview.h \
+    CustomWidgets/pointseditdialog.h \
     CustomWidgets/siunitedit.h \
     Scenarios/coplanardifferentialmicrostrip.h \
     Scenarios/coplanardifferentialstripline.h \
@@ -49,6 +53,8 @@ HEADERS += \
     Scenarios/stripline.h \
     element.h \
     elementlist.h \
+    expression.h \
+    parameterlist.h \
     gauss/gauss.h \
     json.hpp \
     laplace/laplace.h \
@@ -63,6 +69,7 @@ HEADERS += \
     util.h
 
 FORMS += \
+    CustomWidgets/pointseditdialog.ui \
     CustomWidgets/vertexEditDialog.ui \
     Scenarios/scenario.ui \
     mainwindow.ui

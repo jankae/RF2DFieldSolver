@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QList>
+#include <QMap>
 #include <QStyledItemDelegate>
 #include "element.h"
 #include "savable.h"
@@ -38,6 +39,8 @@ public:
     Element *elementAt(int index) const;
     const QList<Element*> getElements() const {return elements;}
     double getDielectricConstantAt(const QPointF &p);
+    // Recomputes the resolved vertices of every element from the given symbol table.
+    void reevaluateAll(const QMap<QString, double> &symbols);
 
     int rowCount(const QModelIndex &parent) const override { Q_UNUSED(parent) return elements.size();}
     int columnCount(const QModelIndex &parent) const override {Q_UNUSED(parent) return (int) Column::Last;}

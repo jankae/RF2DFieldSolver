@@ -5,6 +5,7 @@
 
 #include <QPointF>
 #include "elementlist.h"
+#include "parameterlist.h"
 #include "laplace/laplace.h"
 
 class PCBView : public QWidget
@@ -15,6 +16,7 @@ public:
 
     void setCorners(QPointF topLeft, QPointF bottomRight);
     void setElementList(ElementList *list);
+    void setParameters(ParameterList *params);
     void setLaplace(Laplace *laplace);
 
     void startAppending(Element *e);
@@ -65,6 +67,7 @@ private:
     QPointF bottomRight;
     QTransform transform;
     ElementList *list;
+    ParameterList *params;
     Laplace *laplace;
 
     Element *appendElement;

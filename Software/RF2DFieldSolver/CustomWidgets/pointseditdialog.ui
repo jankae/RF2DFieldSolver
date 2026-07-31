@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>VertexEditDialog</class>
- <widget class="QDialog" name="VertexEditDialog">
+ <class>PointsEditDialog</class>
+ <widget class="QDialog" name="PointsEditDialog">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -9,18 +9,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>170</height>
+    <width>540</width>
+    <height>380</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Vertex Coordinates</string>
+   <string>Edit Points</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="hint">
      <property name="text">
-      <string>A number or an equation over the parameters (e.g. -w/2, h + 0.15mm).</string>
+      <string>Each coordinate may be a number or an equation using the defined parameters, evaluated in base SI units (e.g. -w/2, copper_thickness + 0.15mm).</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -28,38 +28,46 @@
     </widget>
    </item>
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
+    <widget class="QTableWidget" name="table">
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <widget class="QPushButton" name="add">
        <property name="text">
-        <string>X coordinate:</string>
+        <string>Add</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="xpos"/>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="xpreview">
+     <item>
+      <widget class="QPushButton" name="insert">
        <property name="text">
-        <string/>
+        <string>Insert</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_2">
+     <item>
+      <widget class="QPushButton" name="remove">
        <property name="text">
-        <string>Y coordinate:</string>
+        <string>Remove</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="ypos"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="ypreview">
+     <item>
+      <widget class="QPushButton" name="moveUp">
        <property name="text">
-        <string/>
+        <string>Move Up</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="moveDown">
+       <property name="text">
+        <string>Move Down</string>
        </property>
       </widget>
      </item>

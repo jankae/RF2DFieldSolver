@@ -5,11 +5,16 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QAction>
+#include <QLineEdit>
+#include <QLabel>
+#include <cmath>
 
 #include "ui_vertexEditDialog.h"
 #include "util.h"
 
 #include "polygon.h"
+#include "expression.h"
+#include "unit.h"
 
 const QColor PCBView::backgroundColor = Qt::lightGray;
 const QColor PCBView::GNDColor = Qt::black;
@@ -22,6 +27,7 @@ PCBView::PCBView(QWidget *parent)
     : QWidget{parent}
 {
     list = nullptr;
+    params = nullptr;
     laplace = nullptr;
     topLeft = QPointF(-1, 1);
     topLeft = QPointF(1, -1);
@@ -45,6 +51,11 @@ void PCBView::setCorners(QPointF topLeft, QPointF bottomRight)
 void PCBView::setElementList(ElementList *list)
 {
     this->list = list;
+}
+
+void PCBView::setParameters(ParameterList *params)
+{
+    this->params = params;
 }
 
 void PCBView::setLaplace(Laplace *laplace)
@@ -265,43 +276,47 @@ void PCBView::mouseDoubleClickEvent(QMouseEvent *event)
     } else {
         auto info = catchVertex(event->pos());
         if(info.e) {
-            // edit vertex coordinates
+            // edit vertex coordinates as expressions
             auto d = new QDialog(this);
             d->setAttribute(Qt::WA_DeleteOnClose);
             auto ui = new Ui::VertexEditDialog;
             ui->setupUi(d);
 
-            // save previous coordinates
-            auto oldCoords = info.e->getVertices()[info.index];
+            auto oldExpr = info.e->getVertexExpr(info.index);
+            QMap<QString, double> symbols = params ? params->symbols() : QMap<QString, double>();
 
-            auto updateVertex = [=](const QPointF &p){
-                info.e->changeVertex(info.index, p);
-                update();
+            ui->xpos->setText(oldExpr.first);
+            ui->ypos->setText(oldExpr.second);
+
+            // live-evaluated preview; the element is only modified on accept so
+            // that cancelling preserves any equation on the vertex
+            auto updatePreview = [ui, symbols](){
+                auto preview = [&](QLineEdit *edit, QLabel *label){
+                    QString err;
+                    double v = Expression::evaluate(edit->text(), symbols, &err);
+                    if(std::isnan(v)) {
+                        label->setText(err);
+                        label->setStyleSheet("color: red;");
+                    } else {
+                        label->setText("= " + Unit::ToString(v, "m", "fpnum kMGTP", 4));
+                        label->setStyleSheet("");
+                    }
+                };
+                preview(ui->xpos, ui->xpreview);
+                preview(ui->ypos, ui->ypreview);
             };
+            updatePreview();
+            connect(ui->xpos, &QLineEdit::textChanged, d, [=](){ updatePreview(); });
+            connect(ui->ypos, &QLineEdit::textChanged, d, [=](){ updatePreview(); });
 
-            ui->xpos->setUnit("m");
-            ui->xpos->setPrefixes("um ");
-            ui->xpos->setPrecision(4);
-            ui->xpos->setValue(oldCoords.x());
-            connect(ui->xpos, &SIUnitEdit::valueChanged, this, [=](){
-                updateVertex(QPointF(ui->xpos->value(), ui->ypos->value()));
-            });
-
-            ui->ypos->setUnit("m");
-            ui->ypos->setPrefixes("um ");
-            ui->ypos->setPrecision(4);
-            ui->ypos->setValue(oldCoords.y());
-            connect(ui->ypos, &SIUnitEdit::valueChanged, this, [=](){
-                updateVertex(QPointF(ui->xpos->value(), ui->ypos->value()));
-            });
-
-            connect(ui->buttonBox, &QDialogButtonBox::accepted, d, &QDialog::accept);
-            connect(ui->buttonBox, &QDialogButtonBox::rejected, this, [=](){
-                // restore old coordinates
-                info.e->changeVertex(info.index, oldCoords);
+            connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [=](){
+                info.e->setVertexExpr(info.index, ui->xpos->text(), ui->ypos->text());
+                info.e->reevaluate(symbols);
+                someElementChanged();
                 update();
-                d->reject();
+                d->accept();
             });
+            connect(ui->buttonBox, &QDialogButtonBox::rejected, d, &QDialog::reject);
 
             d->show();
         }
