@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 #include "elementlist.h"
+#include "parameterlist.h"
 #include "laplace/laplace.h"
 #include "gauss/gauss.h"
 #include "savable.h"
@@ -32,8 +33,16 @@ private:
     static constexpr double e0 = 8.8541878188e-12;
     void startCalculation();
     void calculationStopped();
+    // Re-evaluates all element vertices from the current parameter values and
+    // repaints the view. Called whenever a parameter or point changes.
+    void refreshGeometry();
+    // Connects the elements table selection to the view highlight. Must be
+    // called again whenever the table's model (and thus its selection model)
+    // is replaced.
+    void wireTableSelection();
     Ui::MainWindow *ui;
     ElementList *list;
+    ParameterList *params;
     Laplace laplace;
     Gauss gauss;
 };

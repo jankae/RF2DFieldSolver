@@ -79,10 +79,17 @@ bool ElementList::removeElement(int index, bool del)
 
 Element *ElementList::elementAt(int index) const
 {
-    if (index >= 0 || index < elements.size()) {
+    if (index >= 0 && index < elements.size()) {
         return elements[index];
     } else {
         return nullptr;
+    }
+}
+
+void ElementList::reevaluateAll(const QMap<QString, double> &symbols)
+{
+    for(auto e : elements) {
+        e->reevaluate(symbols);
     }
 }
 

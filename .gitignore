@@ -1,1 +1,9 @@
 Software/build*
+*.pro.user
+
+# qmake / MinGW in-tree build artifacts
+Software/RF2DFieldSolver/.qmake.stash
+Software/RF2DFieldSolver/Makefile*
+Software/RF2DFieldSolver/debug/
+Software/RF2DFieldSolver/release/
+Software/RF2DFieldSolver/ui_*.h

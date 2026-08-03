@@ -5,6 +5,7 @@
 
 #include <QPointF>
 #include "elementlist.h"
+#include "parameterlist.h"
 #include "laplace/laplace.h"
 
 class PCBView : public QWidget
@@ -15,9 +16,15 @@ public:
 
     void setCorners(QPointF topLeft, QPointF bottomRight);
     void setElementList(ElementList *list);
+    void setParameters(ParameterList *params);
     void setLaplace(Laplace *laplace);
+    // Highlights the given element in the view (nullptr clears the highlight).
+    void setSelectedElement(Element *e);
 
     void startAppending(Element *e);
+    // Ends any in-progress click-to-draw session (e.g. when the user switches
+    // to defining points manually via the points dialog).
+    void stopAppending();
     void setGrid(double grid);
     void setShowGrid(bool show);
     void setSnapToGrid(bool snap);
@@ -29,6 +36,8 @@ public:
     QPointF getBottomRight() const;
 
 signals:
+    // Emitted when the user clicks an element in the view (nullptr on empty space).
+    void elementSelected(Element *e);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -61,12 +70,17 @@ private:
     };
     LineInfo catchLine(QPoint cursor);
 
+    // Returns the element under the cursor (vertex, edge or interior), or nullptr.
+    Element *elementAtCursor(QPoint cursor);
+
     QPointF topLeft;
     QPointF bottomRight;
     QTransform transform;
     ElementList *list;
+    ParameterList *params;
     Laplace *laplace;
 
+    Element *selectedElement;
     Element *appendElement;
     VertexInfo dragVertex;
 

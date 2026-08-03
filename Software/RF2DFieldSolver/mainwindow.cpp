@@ -5,8 +5,11 @@
 
 #include <QDebug>
 #include <QVector>
+#include <QItemSelectionModel>
 
 #include "polygon.h"
+
+#include "CustomWidgets/pointseditdialog.h"
 
 #include "Scenarios/scenario.h"
 
@@ -31,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     showMaximized();
     ui->splitter->setSizes({1000, 3000, 1000});
     ui->splitter_2->setSizes({5000, 1000});
+    ui->leftSplitter->setSizes({1000, 2000});
 
     ui->resolution->setUnit("m");
     ui->resolution->setPrefixes("um ");
@@ -142,12 +146,46 @@ MainWindow::MainWindow(QWidget *parent)
     ui->view->setElementList(list);
     ui->view->setLaplace(&laplace);
 
+    // parameters
+    params = new ParameterList();
+    ui->paramTable->setModel(params);
+    ui->view->setParameters(params);
+    connect(ui->paramAdd, &QPushButton::clicked, this, [=](){
+        params->addParameter();
+    });
+    connect(ui->paramRemove, &QPushButton::clicked, this, [=](){
+        auto row = ui->paramTable->currentIndex().row();
+        if(row >= 0) {
+            params->removeParameter(row);
+        }
+    });
+    // any parameter change re-evaluates the geometry and replots
+    connect(params, &ParameterList::parametersChanged, this, [=](){
+        refreshGeometry();
+    });
+
+    // edit the points of the selected element as expressions
+    connect(ui->editPoints, &QPushButton::clicked, this, [=](){
+        auto row = ui->table->currentIndex().row();
+        if(row < 0 || row >= list->getElements().size()) {
+            return;
+        }
+        // defining points manually ends any click-to-draw session in progress
+        ui->view->stopAppending();
+        auto e = list->elementAt(row);
+        PointsEditDialog d(e, params->symbols(), this);
+        if(d.exec() == QDialog::Accepted) {
+            refreshGeometry();
+        }
+    });
+
     // connections for adding/removing elements
     auto addMenu = new QMenu();
     auto addRF = new QAction("Trace (+)");
     connect(addRF, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::TracePos);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addRF);
@@ -155,6 +193,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addRFNeg, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::TraceNeg);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addRFNeg);
@@ -162,6 +201,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addDielectric, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::Dielectric);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addDielectric);
@@ -169,6 +209,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addGND, &QAction::triggered, [=](){
         auto e = new Element(Element::Type::GND);
         list->addElement(e);
+        ui->table->selectRow(list->getElements().size() - 1);
         ui->view->startAppending(e);
     });
     addMenu->addAction(addGND);
@@ -178,9 +219,47 @@ MainWindow::MainWindow(QWidget *parent)
         auto row = ui->table->currentIndex().row();
         if(row >= 0 && row <= list->getElements().size()) {
             list->removeElement(row);
+            ui->view->setSelectedElement(nullptr);
             ui->view->update();
         }
     });
+
+    // duplicate the selected element (handy for e.g. GND on either side of a trace)
+    connect(ui->duplicate, &QPushButton::clicked, this, [=](){
+        auto row = ui->table->currentIndex().row();
+        if(row < 0 || row >= list->getElements().size()) {
+            return;
+        }
+        auto src = list->elementAt(row);
+        auto copy = new Element(src->getType());
+        copy->setName(src->getName() + " copy");
+        copy->setEpsilonR(src->getEpsilonR());
+        QList<QPair<QString, QString>> exprs;
+        for(int i=0;i<src->vertexCount();i++) {
+            exprs.append(src->getVertexExpr(i));
+        }
+        copy->setVertexExpressions(exprs, params->symbols());
+        list->addElement(copy);
+        int newRow = list->getElements().indexOf(copy);
+        if(newRow >= 0) {
+            ui->table->selectRow(newRow);
+        }
+        refreshGeometry();
+    });
+
+    // clicking an element in the view selects its row in the table
+    connect(ui->view, &PCBView::elementSelected, this, [=](Element *e){
+        if(e) {
+            int row = list->getElements().indexOf(e);
+            if(row >= 0) {
+                ui->table->selectRow(row);
+            }
+        } else {
+            ui->table->clearSelection();
+            ui->view->setSelectedElement(nullptr);
+        }
+    });
+    wireTableSelection();
 
     // connections for the calculations
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::startCalculation);
@@ -283,9 +362,12 @@ MainWindow::MainWindow(QWidget *parent)
             ui->ybottom->setValue(bottomRight.y());
             // switch to the new elements
             ui->view->setElementList(list);
+            ui->view->setSelectedElement(nullptr);
             delete this->list;
             this->list = list;
             ui->table->setModel(list);
+            wireTableSelection();
+            refreshGeometry();
         });
     }
 }
@@ -315,6 +397,8 @@ nlohmann::json MainWindow::toJSON()
     j["tolerance"] = ui->tolerance->value();
     j["threads"] = ui->threads->value();
     j["borderIsGND"] = ui->borderIsGND->isChecked();
+    // store parameters
+    j["parameterList"] = params->toJSON();
     // store elements
     j["list"] = list->toJSON();
     return j;
@@ -339,10 +423,16 @@ void MainWindow::fromJSON(nlohmann::json j)
     ui->tolerance->setValue(j.value("tolerance", ui->tolerance->value()));
     ui->threads->setValue(j.value("threads", ui->threads->value()));
     ui->borderIsGND->setChecked(j.value("borderIsGND", ui->borderIsGND->isChecked()));
+    // load parameters before elements so their symbols are available
+    if(j.contains("parameterList")) {
+        params->fromJSON(j["parameterList"]);
+    }
     // load elements
     if(j.contains("list")) {
         list->fromJSON(j["list"]);
     }
+    // resolve element vertices against the loaded parameters
+    list->reevaluateAll(params->symbols());
 }
 
 void MainWindow::info(QString info)
@@ -397,6 +487,11 @@ void MainWindow::startCalculation()
     ui->borderIsGND->setEnabled(false);
     ui->add->setEnabled(false);
     ui->remove->setEnabled(false);
+    ui->duplicate->setEnabled(false);
+    ui->editPoints->setEnabled(false);
+    ui->paramTable->setEnabled(false);
+    ui->paramAdd->setEnabled(false);
+    ui->paramRemove->setEnabled(false);
 
     // start the calculations
     ui->status->clear();
@@ -523,5 +618,33 @@ void MainWindow::calculationStopped()
     ui->borderIsGND->setEnabled(true);
     ui->add->setEnabled(true);
     ui->remove->setEnabled(true);
+    ui->duplicate->setEnabled(true);
+    ui->editPoints->setEnabled(true);
+    ui->paramTable->setEnabled(true);
+    ui->paramAdd->setEnabled(true);
+    ui->paramRemove->setEnabled(true);
+}
+
+void MainWindow::wireTableSelection()
+{
+    connect(ui->table->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
+            [=](const QModelIndex &current, const QModelIndex &){
+        Element *e = nullptr;
+        if(current.isValid() && current.row() < list->getElements().size()) {
+            e = list->elementAt(current.row());
+        }
+        ui->view->setSelectedElement(e);
+    });
+}
+
+void MainWindow::refreshGeometry()
+{
+    // recompute all element vertices from the current parameter values
+    list->reevaluateAll(params->symbols());
+    // the geometry changed, any previous field solution is no longer valid
+    if(laplace.isResultReady()) {
+        laplace.invalidateResult();
+    }
+    ui->view->update();
 }
 

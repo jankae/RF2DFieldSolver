@@ -5,11 +5,16 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QAction>
+#include <QLineEdit>
+#include <QLabel>
+#include <cmath>
 
 #include "ui_vertexEditDialog.h"
 #include "util.h"
 
 #include "polygon.h"
+#include "expression.h"
+#include "unit.h"
 
 const QColor PCBView::backgroundColor = Qt::lightGray;
 const QColor PCBView::GNDColor = Qt::black;
@@ -22,9 +27,11 @@ PCBView::PCBView(QWidget *parent)
     : QWidget{parent}
 {
     list = nullptr;
+    params = nullptr;
     laplace = nullptr;
     topLeft = QPointF(-1, 1);
     topLeft = QPointF(1, -1);
+    selectedElement = nullptr;
     appendElement = nullptr;
     dragVertex.e = nullptr;
     dragVertex.index = 0;
@@ -45,6 +52,21 @@ void PCBView::setCorners(QPointF topLeft, QPointF bottomRight)
 void PCBView::setElementList(ElementList *list)
 {
     this->list = list;
+    // the previous selection belongs to the old list
+    selectedElement = nullptr;
+}
+
+void PCBView::setParameters(ParameterList *params)
+{
+    this->params = params;
+}
+
+void PCBView::setSelectedElement(Element *e)
+{
+    if(selectedElement != e) {
+        selectedElement = e;
+        update();
+    }
 }
 
 void PCBView::setLaplace(Laplace *laplace)
@@ -56,6 +78,15 @@ void PCBView::startAppending(Element *e)
 {
     appendElement = e;
     setMouseTracking(true);
+}
+
+void PCBView::stopAppending()
+{
+    if(appendElement) {
+        appendElement = nullptr;
+        setMouseTracking(false);
+        update();
+    }
 }
 
 void PCBView::setGrid(double grid)
@@ -159,10 +190,24 @@ void PCBView::paintEvent(QPaintEvent *event)
             case Element::Type::GND: elementColor = GNDColor; break;
             default: elementColor = Qt::gray; break;
             }
+            auto vertices = e->getVertices();
+
+            // highlight the selected element with a glow drawn behind it
+            if(e == selectedElement && vertices.size() > 1) {
+                QPen glow(QColor(255, 193, 7, 220));   // amber
+                glow.setWidth(4);
+                p.setPen(glow);
+                p.setBrush(Qt::NoBrush);
+                QPolygonF poly;
+                for(auto &v : vertices) {
+                    poly << transform.map(v);
+                }
+                p.drawPolygon(poly);
+            }
+
             p.setBrush(elementColor);
             p.setPen(elementColor);
 
-            auto vertices = e->getVertices();
             // paint vertices in viewport to get constant vertex size
             for(auto v : vertices) {
                 auto devicePoint = transform.map(v);
@@ -216,6 +261,11 @@ void PCBView::mousePressEvent(QMouseEvent *event)
     } else {
         // not appending, may have been a click on a vertex
         dragVertex = catchVertex(event->pos());
+        // update the selection based on what was clicked
+        Element *clicked = dragVertex.e ? dragVertex.e : elementAtCursor(event->pos());
+        selectedElement = clicked;
+        emit elementSelected(clicked);
+        update();
     }
 }
 
@@ -265,43 +315,47 @@ void PCBView::mouseDoubleClickEvent(QMouseEvent *event)
     } else {
         auto info = catchVertex(event->pos());
         if(info.e) {
-            // edit vertex coordinates
+            // edit vertex coordinates as expressions
             auto d = new QDialog(this);
             d->setAttribute(Qt::WA_DeleteOnClose);
             auto ui = new Ui::VertexEditDialog;
             ui->setupUi(d);
 
-            // save previous coordinates
-            auto oldCoords = info.e->getVertices()[info.index];
+            auto oldExpr = info.e->getVertexExpr(info.index);
+            QMap<QString, double> symbols = params ? params->symbols() : QMap<QString, double>();
 
-            auto updateVertex = [=](const QPointF &p){
-                info.e->changeVertex(info.index, p);
-                update();
+            ui->xpos->setText(oldExpr.first);
+            ui->ypos->setText(oldExpr.second);
+
+            // live-evaluated preview; the element is only modified on accept so
+            // that cancelling preserves any equation on the vertex
+            auto updatePreview = [ui, symbols](){
+                auto preview = [&](QLineEdit *edit, QLabel *label){
+                    QString err;
+                    double v = Expression::evaluate(edit->text(), symbols, &err);
+                    if(std::isnan(v)) {
+                        label->setText(err);
+                        label->setStyleSheet("color: red;");
+                    } else {
+                        label->setText("= " + Unit::ToString(v, "m", "fpnum kMGTP", 4));
+                        label->setStyleSheet("");
+                    }
+                };
+                preview(ui->xpos, ui->xpreview);
+                preview(ui->ypos, ui->ypreview);
             };
+            updatePreview();
+            connect(ui->xpos, &QLineEdit::textChanged, d, [=](){ updatePreview(); });
+            connect(ui->ypos, &QLineEdit::textChanged, d, [=](){ updatePreview(); });
 
-            ui->xpos->setUnit("m");
-            ui->xpos->setPrefixes("um ");
-            ui->xpos->setPrecision(4);
-            ui->xpos->setValue(oldCoords.x());
-            connect(ui->xpos, &SIUnitEdit::valueChanged, this, [=](){
-                updateVertex(QPointF(ui->xpos->value(), ui->ypos->value()));
-            });
-
-            ui->ypos->setUnit("m");
-            ui->ypos->setPrefixes("um ");
-            ui->ypos->setPrecision(4);
-            ui->ypos->setValue(oldCoords.y());
-            connect(ui->ypos, &SIUnitEdit::valueChanged, this, [=](){
-                updateVertex(QPointF(ui->xpos->value(), ui->ypos->value()));
-            });
-
-            connect(ui->buttonBox, &QDialogButtonBox::accepted, d, &QDialog::accept);
-            connect(ui->buttonBox, &QDialogButtonBox::rejected, this, [=](){
-                // restore old coordinates
-                info.e->changeVertex(info.index, oldCoords);
+            connect(ui->buttonBox, &QDialogButtonBox::accepted, this, [=](){
+                info.e->setVertexExpr(info.index, ui->xpos->text(), ui->ypos->text());
+                info.e->reevaluate(symbols);
+                someElementChanged();
                 update();
-                d->reject();
+                d->accept();
             });
+            connect(ui->buttonBox, &QDialogButtonBox::rejected, d, &QDialog::reject);
 
             d->show();
         }
@@ -311,7 +365,12 @@ void PCBView::mouseDoubleClickEvent(QMouseEvent *event)
 void PCBView::contextMenuEvent(QContextMenuEvent *event)
 {
     if (appendElement) {
-        // ignore
+        // right-click finishes the current polygon (the shape is implicitly
+        // closed); this gives a clean way to stop adding points instead of
+        // leaving the outline stuck to the cursor
+        appendElement = nullptr;
+        setMouseTracking(false);
+        update();
         return;
     }
     auto menu = new QMenu();
@@ -419,6 +478,29 @@ PCBView::LineInfo PCBView::catchLine(QPoint cursor)
         }
     }
     return info;
+}
+
+Element *PCBView::elementAtCursor(QPoint cursor)
+{
+    if(!list) {
+        return nullptr;
+    }
+    // prefer a vertex, then an edge, then the polygon interior
+    auto v = catchVertex(cursor);
+    if(v.e) {
+        return v.e;
+    }
+    auto l = catchLine(cursor);
+    if(l.e) {
+        return l.e;
+    }
+    auto coord = transform.inverted().map(QPointF(cursor));
+    for(auto e : list->getElements()) {
+        if(QPolygonF(e->getVertices()).containsPoint(coord, Qt::OddEvenFill)) {
+            return e;
+        }
+    }
+    return nullptr;
 }
 
 QPointF PCBView::getBottomRight() const
