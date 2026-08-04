@@ -4,10 +4,13 @@
 #include <QMainWindow>
 
 #include "elementlist.h"
+#include "labellist.h"
 #include "parameterlist.h"
 #include "laplace/laplace.h"
 #include "gauss/gauss.h"
 #include "savable.h"
+
+class QAction;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,10 +43,20 @@ private:
     // called again whenever the table's model (and thus its selection model)
     // is replaced.
     void wireTableSelection();
+    // Builds the View menu (label/contour toggles and label text size) and wires
+    // it to the view.
+    void setupViewMenu();
+    // Applies a label text size to the view and checks the matching menu entry.
+    void applyLabelTextSize(int pixels);
     Ui::MainWindow *ui;
     ElementList *list;
+    LabelList *labels;
     ParameterList *params;
     Laplace laplace;
     Gauss gauss;
+    // View menu actions kept so their state can be restored from a project file.
+    QAction *actShowLabels;
+    QAction *actFillContours;
+    QMap<int, QAction*> labelSizeActions;
 };
 #endif // MAINWINDOW_H

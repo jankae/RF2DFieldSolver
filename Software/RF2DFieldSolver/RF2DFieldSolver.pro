@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     CustomWidgets/informationbox.cpp \
+    CustomWidgets/labeleditdialog.cpp \
     CustomWidgets/pcbview.cpp \
     CustomWidgets/pointseditdialog.cpp \
     CustomWidgets/siunitedit.cpp \
@@ -25,6 +26,8 @@ SOURCES += \
     element.cpp \
     elementlist.cpp \
     expression.cpp \
+    label.cpp \
+    labellist.cpp \
     parameterlist.cpp \
     gauss/gauss.cpp \
     laplace/laplace.cpp \
@@ -39,6 +42,7 @@ SOURCES += \
 
 HEADERS += \
     CustomWidgets/informationbox.h \
+    CustomWidgets/labeleditdialog.h \
     CustomWidgets/pcbview.h \
     CustomWidgets/pointseditdialog.h \
     CustomWidgets/siunitedit.h \
@@ -54,6 +58,8 @@ HEADERS += \
     element.h \
     elementlist.h \
     expression.h \
+    label.h \
+    labellist.h \
     parameterlist.h \
     gauss/gauss.h \
     json.hpp \
@@ -69,6 +75,7 @@ HEADERS += \
     util.h
 
 FORMS += \
+    CustomWidgets/labeleditdialog.ui \
     CustomWidgets/pointseditdialog.ui \
     CustomWidgets/vertexEditDialog.ui \
     Scenarios/scenario.ui \

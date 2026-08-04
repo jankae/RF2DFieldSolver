@@ -10,8 +10,12 @@
 #include "polygon.h"
 
 #include "CustomWidgets/pointseditdialog.h"
+#include "CustomWidgets/labeleditdialog.h"
 
 #include "Scenarios/scenario.h"
+
+#include <QMenuBar>
+#include <QActionGroup>
 
 static const QString APP_VERSION = QString::number(FW_MAJOR) + "." +
                                    QString::number(FW_MINOR) + "." +
@@ -247,6 +251,88 @@ MainWindow::MainWindow(QWidget *parent)
         refreshGeometry();
     });
 
+    // labels (text annotations and dimension arrows drawn in the view)
+    labels = new LabelList();
+    ui->labelsTable->setModel(labels);
+    ui->labelsTable->setItemDelegateForColumn((int) LabelList::Column::Type, new LabelTypeDelegate());
+    ui->view->setLabelList(labels);
+    // repaint the view whenever a label is added/removed/edited inline
+    connect(labels, &QAbstractItemModel::dataChanged, this, [=](){ ui->view->update(); });
+    connect(labels, &QAbstractItemModel::rowsInserted, this, [=](){ ui->view->update(); });
+    connect(labels, &QAbstractItemModel::rowsRemoved, this, [=](){ ui->view->update(); });
+
+    // The labels panel sits below the elements table (both share one splitter
+    // pane via a plain vertical layout). It is collapsed by default: unchecking
+    // it hides its contents so only the "Labels" title bar remains, keeping it
+    // out of the way. Its size policy (set in the .ui) stops it from stretching,
+    // so the elements table keeps the space.
+    connect(ui->labelsBox, &QGroupBox::toggled, ui->labelsContent, &QWidget::setVisible);
+    ui->labelsContent->setVisible(ui->labelsBox->isChecked());
+
+    // add labels (Text or Dimension) via a small dropdown menu
+    auto labelAddMenu = new QMenu();
+    auto addText = new QAction("Text");
+    connect(addText, &QAction::triggered, this, [=](){
+        auto l = new Label(Label::Type::Text);
+        labels->addLabel(l);
+        ui->labelsTable->selectRow(labels->getLabels().size() - 1);
+        refreshGeometry();
+    });
+    labelAddMenu->addAction(addText);
+    auto addDimension = new QAction("Dimension");
+    connect(addDimension, &QAction::triggered, this, [=](){
+        auto l = new Label(Label::Type::Dimension);
+        labels->addLabel(l);
+        ui->labelsTable->selectRow(labels->getLabels().size() - 1);
+        refreshGeometry();
+    });
+    labelAddMenu->addAction(addDimension);
+    ui->labelAdd->setMenu(labelAddMenu);
+
+    connect(ui->labelDuplicate, &QPushButton::clicked, this, [=](){
+        auto row = ui->labelsTable->currentIndex().row();
+        if(row < 0 || row >= labels->getLabels().size()) {
+            return;
+        }
+        auto src = labels->labelAt(row);
+        auto copy = new Label(src->getType());
+        copy->setText(src->getText());
+        QList<QPair<QString, QString>> exprs;
+        for(int i=0;i<src->pointCount();i++) {
+            exprs.append(src->getPointExpr(i));
+        }
+        copy->setPointExpressions(exprs, params->symbols());
+        labels->addLabel(copy);
+        int newRow = labels->getLabels().indexOf(copy);
+        if(newRow >= 0) {
+            ui->labelsTable->selectRow(newRow);
+        }
+        refreshGeometry();
+    });
+
+    connect(ui->labelRemove, &QPushButton::clicked, this, [=](){
+        auto row = ui->labelsTable->currentIndex().row();
+        if(row >= 0 && row < labels->getLabels().size()) {
+            labels->removeLabel(row);
+            ui->view->update();
+        }
+    });
+
+    connect(ui->labelEdit, &QPushButton::clicked, this, [=](){
+        auto row = ui->labelsTable->currentIndex().row();
+        if(row < 0 || row >= labels->getLabels().size()) {
+            return;
+        }
+        auto l = labels->labelAt(row);
+        LabelEditDialog d(l, params->symbols(), this);
+        if(d.exec() == QDialog::Accepted) {
+            refreshGeometry();
+        }
+    });
+
+    // View menu (label/contour toggles and label text size)
+    setupViewMenu();
+
     // clicking an element in the view selects its row in the table
     connect(ui->view, &PCBView::elementSelected, this, [=](Element *e){
         if(e) {
@@ -391,6 +477,9 @@ nlohmann::json MainWindow::toJSON()
     j["showGrid"] = ui->showGrid->isChecked();
     j["snapToGrid"] = ui->snapGrid->isChecked();
     j["viewMode"] = ui->viewMode->currentText().toStdString();
+    j["showLabels"] = ui->view->getShowLabels();
+    j["fillContours"] = ui->view->getFillContours();
+    j["labelTextSize"] = ui->view->getLabelTextSize();
     // store simulation parameters
     j["simulationGrid"] = ui->resolution->value();
     j["gaussDistance"] = ui->gaussDistance->value();
@@ -401,6 +490,8 @@ nlohmann::json MainWindow::toJSON()
     j["parameterList"] = params->toJSON();
     // store elements
     j["list"] = list->toJSON();
+    // store labels
+    j["labels"] = labels->toJSON();
     return j;
 }
 
@@ -417,6 +508,10 @@ void MainWindow::fromJSON(nlohmann::json j)
     ui->showGrid->setChecked(j.value("showGrid", ui->showGrid->isChecked()));
     ui->snapGrid->setChecked(j.value("snapToGrid", ui->snapGrid->isChecked()));
     ui->viewMode->setCurrentText(QString::fromStdString(j.value("viewMode", ui->viewMode->currentText().toStdString())));
+    // label/contour view settings (checking the menu actions also updates the view)
+    actShowLabels->setChecked(j.value("showLabels", ui->view->getShowLabels()));
+    actFillContours->setChecked(j.value("fillContours", ui->view->getFillContours()));
+    applyLabelTextSize(j.value("labelTextSize", ui->view->getLabelTextSize()));
     // load simulation parameters
     ui->resolution->setValue(j.value("simulationGrid", ui->resolution->value()));
     ui->gaussDistance->setValue(j.value("gaussDistance", ui->gaussDistance->value()));
@@ -431,8 +526,14 @@ void MainWindow::fromJSON(nlohmann::json j)
     if(j.contains("list")) {
         list->fromJSON(j["list"]);
     }
-    // resolve element vertices against the loaded parameters
+    // load labels (older files without this key simply have no labels)
+    if(j.contains("labels")) {
+        labels->fromJSON(j["labels"]);
+    }
+    // resolve element vertices and label points against the loaded parameters
     list->reevaluateAll(params->symbols());
+    labels->reevaluateAll(params->symbols());
+    ui->view->update();
 }
 
 void MainWindow::info(QString info)
@@ -637,10 +738,60 @@ void MainWindow::wireTableSelection()
     });
 }
 
+void MainWindow::setupViewMenu()
+{
+    auto viewMenu = new QMenu("View", this);
+    // place View before the Predefined Scenarios menu for conventional ordering
+    menuBar()->insertMenu(ui->menuPredefined_Scenarios->menuAction(), viewMenu);
+
+    actShowLabels = viewMenu->addAction("Show Labels");
+    actShowLabels->setCheckable(true);
+    actShowLabels->setChecked(ui->view->getShowLabels());
+    connect(actShowLabels, &QAction::toggled, this, [=](bool on){
+        ui->view->setShowLabels(on);
+    });
+
+    actFillContours = viewMenu->addAction("Fill Contours");
+    actFillContours->setCheckable(true);
+    actFillContours->setChecked(ui->view->getFillContours());
+    connect(actFillContours, &QAction::toggled, this, [=](bool on){
+        ui->view->setFillContours(on);
+    });
+
+    auto sizeMenu = viewMenu->addMenu("Label Text Size");
+    auto sizeGroup = new QActionGroup(this);
+    sizeGroup->setExclusive(true);
+    struct { const char *name; int px; } sizes[] = {
+        {"Small", 10}, {"Medium", 14}, {"Large", 20}, {"Extra Large", 28},
+    };
+    for(auto &s : sizes) {
+        auto a = sizeMenu->addAction(s.name);
+        a->setCheckable(true);
+        sizeGroup->addAction(a);
+        labelSizeActions.insert(s.px, a);
+        int px = s.px;
+        connect(a, &QAction::triggered, this, [=](){
+            ui->view->setLabelTextSize(px);
+        });
+    }
+    // reflect the view's current size in the menu
+    applyLabelTextSize(ui->view->getLabelTextSize());
+}
+
+void MainWindow::applyLabelTextSize(int pixels)
+{
+    ui->view->setLabelTextSize(pixels);
+    if(labelSizeActions.contains(pixels)) {
+        labelSizeActions[pixels]->setChecked(true);
+    }
+}
+
 void MainWindow::refreshGeometry()
 {
     // recompute all element vertices from the current parameter values
     list->reevaluateAll(params->symbols());
+    // labels share the same parameters, keep their resolved points in sync
+    labels->reevaluateAll(params->symbols());
     // the geometry changed, any previous field solution is no longer valid
     if(laplace.isResultReady()) {
         laplace.invalidateResult();
