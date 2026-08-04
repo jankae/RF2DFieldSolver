@@ -9,20 +9,12 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    CustomWidgets/examplebrowserdialog.cpp \
     CustomWidgets/informationbox.cpp \
     CustomWidgets/labeleditdialog.cpp \
     CustomWidgets/pcbview.cpp \
     CustomWidgets/pointseditdialog.cpp \
     CustomWidgets/siunitedit.cpp \
-    Scenarios/coplanardifferentialmicrostrip.cpp \
-    Scenarios/coplanardifferentialstripline.cpp \
-    Scenarios/coplanarmicrostrip.cpp \
-    Scenarios/coplanarstripline.cpp \
-    Scenarios/differentialmicrostrip.cpp \
-    Scenarios/differentialstripline.cpp \
-    Scenarios/microstrip.cpp \
-    Scenarios/scenario.cpp \
-    Scenarios/stripline.cpp \
     element.cpp \
     elementlist.cpp \
     expression.cpp \
@@ -41,20 +33,12 @@ SOURCES += \
     util.cpp
 
 HEADERS += \
+    CustomWidgets/examplebrowserdialog.h \
     CustomWidgets/informationbox.h \
     CustomWidgets/labeleditdialog.h \
     CustomWidgets/pcbview.h \
     CustomWidgets/pointseditdialog.h \
     CustomWidgets/siunitedit.h \
-    Scenarios/coplanardifferentialmicrostrip.h \
-    Scenarios/coplanardifferentialstripline.h \
-    Scenarios/coplanarmicrostrip.h \
-    Scenarios/coplanarstripline.h \
-    Scenarios/differentialmicrostrip.h \
-    Scenarios/differentialstripline.h \
-    Scenarios/microstrip.h \
-    Scenarios/scenario.h \
-    Scenarios/stripline.h \
     element.h \
     elementlist.h \
     expression.h \
@@ -75,10 +59,10 @@ HEADERS += \
     util.h
 
 FORMS += \
+    CustomWidgets/examplebrowserdialog.ui \
     CustomWidgets/labeleditdialog.ui \
     CustomWidgets/pointseditdialog.ui \
     CustomWidgets/vertexEditDialog.ui \
-    Scenarios/scenario.ui \
     mainwindow.ui
 
 # Default rules for deployment.

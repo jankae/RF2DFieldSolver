@@ -48,6 +48,9 @@ private:
     void setupViewMenu();
     // Applies a label text size to the view and checks the matching menu entry.
     void applyLabelTextSize(int pixels);
+    // Evaluates the (optional) area-bound expressions against the current
+    // parameters and pushes the results into the area fields.
+    void applyAreaExpressions();
     Ui::MainWindow *ui;
     ElementList *list;
     LabelList *labels;
@@ -58,5 +61,10 @@ private:
     QAction *actShowLabels;
     QAction *actFillContours;
     QMap<int, QAction*> labelSizeActions;
+    // Optional expressions backing the simulation-area bounds (empty ⇒ the bound
+    // is a fixed number). updatingArea guards programmatic field updates so they
+    // are not mistaken for a manual edit that would clear the expression.
+    QString xleftExpr, xrightExpr, ytopExpr, ybottomExpr;
+    bool updatingArea = false;
 };
 #endif // MAINWINDOW_H

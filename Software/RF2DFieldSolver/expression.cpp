@@ -13,7 +13,7 @@ namespace {
 static const QString SI_PREFIXES = "fpnumkMGTP ";
 
 struct Token {
-    enum class Type { Number, Ident, Plus, Minus, Star, Slash, Caret, LParen, RParen, End };
+    enum class Type { Number, Ident, Plus, Minus, Star, Slash, Caret, LParen, RParen, Comma, End };
     Type type = Type::End;
     double value = 0;   // valid for Number
     QString text;       // valid for Ident
@@ -23,6 +23,37 @@ class ParseError : public std::runtime_error {
 public:
     explicit ParseError(const QString &m) : std::runtime_error(m.toStdString()) {}
 };
+
+// Applies one of the built-in functions to its evaluated arguments.
+static double applyFunction(const QString &name, const std::vector<double> &args)
+{
+    if (name == "max" || name == "min") {
+        if (args.empty()) {
+            throw ParseError(name + "() needs at least one argument");
+        }
+        double r = args[0];
+        for (size_t i = 1; i < args.size(); i++) {
+            r = (name == "max") ? std::max(r, args[i]) : std::min(r, args[i]);
+        }
+        return r;
+    }
+    if (name == "abs") {
+        if (args.size() != 1) {
+            throw ParseError("abs() needs exactly one argument");
+        }
+        return std::abs(args[0]);
+    }
+    if (name == "sqrt") {
+        if (args.size() != 1) {
+            throw ParseError("sqrt() needs exactly one argument");
+        }
+        if (args[0] < 0) {
+            throw ParseError("sqrt of a negative number");
+        }
+        return std::sqrt(args[0]);
+    }
+    throw ParseError(QString("unknown function '%1'").arg(name));
+}
 
 static bool isDigit(QChar c) { return c >= QChar('0') && c <= QChar('9'); }
 static bool isLetter(QChar c) {
@@ -65,6 +96,7 @@ public:
             case '^': t.type = Token::Type::Caret; break;
             case '(': t.type = Token::Type::LParen; break;
             case ')': t.type = Token::Type::RParen; break;
+            case ',': t.type = Token::Type::Comma; break;
             default:
                 throw ParseError(QString("unexpected character '%1'").arg(c));
             }
@@ -211,10 +243,28 @@ private:
             return t.value;
         }
         if (t.type == Token::Type::Ident) {
+            QString name = t.text;
             advance();
-            auto it = symbols.find(t.text);
+            // an identifier immediately followed by '(' is a function call
+            if (peek().type == Token::Type::LParen) {
+                advance();
+                std::vector<double> args;
+                if (peek().type != Token::Type::RParen) {
+                    args.push_back(parseExpr());
+                    while (peek().type == Token::Type::Comma) {
+                        advance();
+                        args.push_back(parseExpr());
+                    }
+                }
+                if (peek().type != Token::Type::RParen) {
+                    throw ParseError("missing ')'");
+                }
+                advance();
+                return applyFunction(name, args);
+            }
+            auto it = symbols.find(name);
             if (it == symbols.end()) {
-                throw ParseError(QString("unknown parameter '%1'").arg(t.text));
+                throw ParseError(QString("unknown parameter '%1'").arg(name));
             }
             return it.value();
         }
@@ -267,4 +317,25 @@ double Expression::evaluate(const QString &expr, const QMap<QString, double> &sy
         }
         return std::numeric_limits<double>::quiet_NaN();
     }
+}
+
+QStringList Expression::functionNames()
+{
+    return {"max", "min", "abs", "sqrt"};
+}
+
+bool Expression::isValidParameterName(const QString &name)
+{
+    if (name.isEmpty()) {
+        return false;
+    }
+    if (!isLetter(name.at(0))) {
+        return false;
+    }
+    for (int i = 1; i < name.size(); i++) {
+        if (!isIdentChar(name.at(i))) {
+            return false;
+        }
+    }
+    return !functionNames().contains(name);
 }

@@ -19,6 +19,10 @@ public:
     virtual void fromJSON(nlohmann::json j) = 0;
 
     bool openFromFileDialog(QString title, QString filetype);
+    // Loads a project directly from a filesystem path (no dialog).
+    bool openFromFile(QString filename);
+    // Loads a project embedded as a Qt resource (e.g. ":/examples/microstrip.RF2Dproj").
+    bool openFromResource(QString resourcePath);
     bool saveToFileDialog(QString title, QString filetype, QString ending = "");
 
     class SettingDescription {

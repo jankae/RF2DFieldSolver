@@ -8,14 +8,16 @@
 #include <QItemSelectionModel>
 
 #include "polygon.h"
+#include "expression.h"
 
 #include "CustomWidgets/pointseditdialog.h"
 #include "CustomWidgets/labeleditdialog.h"
-
-#include "Scenarios/scenario.h"
+#include "CustomWidgets/examplebrowserdialog.h"
+#include "CustomWidgets/informationbox.h"
 
 #include <QMenuBar>
 #include <QActionGroup>
+#include <cmath>
 
 static const QString APP_VERSION = QString::number(FW_MAJOR) + "." +
                                    QString::number(FW_MINOR) + "." +
@@ -82,6 +84,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->ybottom->setPrecision(4);
     connect(ui->ybottom, &SIUnitEdit::valueChanged, this, updateViewArea);
     ui->ybottom->setValue(-1e-3);
+
+    // The area bounds may be parameterised (auto-size). A manual edit of a field
+    // detaches that bound from its expression; programmatic updates (from loading
+    // or re-evaluating parameters) are guarded by updatingArea.
+    connect(ui->xleft, &SIUnitEdit::valueChanged, this, [=](){ if(!updatingArea) xleftExpr.clear(); });
+    connect(ui->xright, &SIUnitEdit::valueChanged, this, [=](){ if(!updatingArea) xrightExpr.clear(); });
+    connect(ui->ytop, &SIUnitEdit::valueChanged, this, [=](){ if(!updatingArea) ytopExpr.clear(); });
+    connect(ui->ybottom, &SIUnitEdit::valueChanged, this, [=](){ if(!updatingArea) ybottomExpr.clear(); });
 
     ui->gridsize->setUnit("m");
     ui->gridsize->setPrefixes("um ");
@@ -433,29 +443,27 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&laplace, &Laplace::calculationAborted, this, calculationAborted);
 
-    auto scenarios = Scenario::createAll();
-    for(auto s : scenarios) {
-        auto action = new QAction(s->getName());
-        ui->menuPredefined_Scenarios->addAction(action);
-        connect(action, &QAction::triggered, this, [=](){
-            s->show();
-        });
-        connect(s, &Scenario::scenarioCreated, this, [=](QPointF topLeft, QPointF bottomRight, ElementList *list){
-            // set up new area
-            ui->xleft->setValue(topLeft.x());
-            ui->xright->setValue(bottomRight.x());
-            ui->ytop->setValue(topLeft.y());
-            ui->ybottom->setValue(bottomRight.y());
-            // switch to the new elements
-            ui->view->setElementList(list);
-            ui->view->setSelectedElement(nullptr);
-            delete this->list;
-            this->list = list;
-            ui->table->setModel(list);
-            wireTableSelection();
+    // Examples: browse and load built-in parameterised example projects
+    connect(ui->actionBrowseExamples, &QAction::triggered, this, [=](){
+        ExampleBrowserDialog d(this);
+        if(d.exec() != QDialog::Accepted) {
+            return;
+        }
+        auto path = d.selectedResourcePath();
+        if(path.isEmpty()) {
+            return;
+        }
+        if(!InformationBox::AskQuestion("Load example",
+                "Discard the current project and load this example?", true)) {
+            return;
+        }
+        // examples load in place: fromJSON refreshes the existing models
+        ui->view->setSelectedElement(nullptr);
+        if(openFromResource(path)) {
             refreshGeometry();
-        });
-    }
+            ui->view->update();
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -466,11 +474,16 @@ MainWindow::~MainWindow()
 nlohmann::json MainWindow::toJSON()
 {
     nlohmann::json j;
-    // store simulation box imformation
+    // store simulation box imformation (resolved values, backward compatible)
     j["xleft"] = ui->xleft->value();
     j["xright"] = ui->xright->value();
     j["ytop"] = ui->ytop->value();
     j["ybottom"] = ui->ybottom->value();
+    // and the optional expressions backing them (auto-size)
+    if(!xleftExpr.isEmpty())   j["xleftExpr"]   = xleftExpr.toStdString();
+    if(!xrightExpr.isEmpty())  j["xrightExpr"]  = xrightExpr.toStdString();
+    if(!ytopExpr.isEmpty())    j["ytopExpr"]    = ytopExpr.toStdString();
+    if(!ybottomExpr.isEmpty()) j["ybottomExpr"] = ybottomExpr.toStdString();
     j["viewGrid"] = ui->gridsize->value();
     // store view settings
     j["showPotential"] = ui->showPotential->isChecked();
@@ -497,11 +510,19 @@ nlohmann::json MainWindow::toJSON()
 
 void MainWindow::fromJSON(nlohmann::json j)
 {
-    // load simulation box information
+    // load simulation box information. Guard so loading the numeric values does
+    // not clear the expressions we are about to load.
+    updatingArea = true;
     ui->xleft->setValue(j.value("xleft", ui->xleft->value()));
     ui->xright->setValue(j.value("xright", ui->xright->value()));
     ui->ytop->setValue(j.value("ytop", ui->ytop->value()));
     ui->ybottom->setValue(j.value("ybottom", ui->ybottom->value()));
+    // optional area expressions (absent ⇒ fixed numeric area, backward compatible)
+    xleftExpr   = QString::fromStdString(j.value("xleftExpr", std::string()));
+    xrightExpr  = QString::fromStdString(j.value("xrightExpr", std::string()));
+    ytopExpr    = QString::fromStdString(j.value("ytopExpr", std::string()));
+    ybottomExpr = QString::fromStdString(j.value("ybottomExpr", std::string()));
+    updatingArea = false;
     ui->gridsize->setValue(j.value("viewGrid", ui->gridsize->value()));
     // load view settings
     ui->showPotential->setChecked(j.value("showPotential", ui->showPotential->isChecked()));
@@ -533,6 +554,8 @@ void MainWindow::fromJSON(nlohmann::json j)
     // resolve element vertices and label points against the loaded parameters
     list->reevaluateAll(params->symbols());
     labels->reevaluateAll(params->symbols());
+    // resolve the (optional) parameterised area bounds
+    applyAreaExpressions();
     ui->view->update();
 }
 
@@ -786,12 +809,34 @@ void MainWindow::applyLabelTextSize(int pixels)
     }
 }
 
+void MainWindow::applyAreaExpressions()
+{
+    struct { QString *expr; SIUnitEdit *edit; } bounds[] = {
+        { &xleftExpr, ui->xleft }, { &xrightExpr, ui->xright },
+        { &ytopExpr, ui->ytop }, { &ybottomExpr, ui->ybottom },
+    };
+    // guard so setting the resolved value does not clear the expression
+    updatingArea = true;
+    for(auto &b : bounds) {
+        if(b.expr->isEmpty()) {
+            continue;
+        }
+        double v = Expression::evaluate(*b.expr, params->symbols(), nullptr);
+        if(!std::isnan(v)) {
+            b.edit->setValue(v);
+        }
+    }
+    updatingArea = false;
+}
+
 void MainWindow::refreshGeometry()
 {
     // recompute all element vertices from the current parameter values
     list->reevaluateAll(params->symbols());
     // labels share the same parameters, keep their resolved points in sync
     labels->reevaluateAll(params->symbols());
+    // re-size the (optionally) parameterised simulation area
+    applyAreaExpressions();
     // the geometry changed, any previous field solution is no longer valid
     if(laplace.isResultReady()) {
         laplace.invalidateResult();

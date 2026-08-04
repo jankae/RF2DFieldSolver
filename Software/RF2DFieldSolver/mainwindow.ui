@@ -609,8 +609,9 @@
    </widget>
    <widget class="QMenu" name="menuPredefined_Scenarios">
     <property name="title">
-     <string>Predefined Scenarios</string>
+     <string>Examples</string>
     </property>
+    <addaction name="actionBrowseExamples"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuPredefined_Scenarios"/>
@@ -624,6 +625,11 @@
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
+   </property>
+  </action>
+  <action name="actionBrowseExamples">
+   <property name="text">
+    <string>Browse Examples…</string>
    </property>
   </action>
   <action name="actionSet_Area">
