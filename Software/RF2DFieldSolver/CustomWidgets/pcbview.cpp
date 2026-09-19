@@ -7,6 +7,9 @@
 #include <QAction>
 #include <QLineEdit>
 #include <QLabel>
+#include <QFont>
+#include <QFontMetrics>
+#include <QLineF>
 #include <cmath>
 
 #include "ui_vertexEditDialog.h"
@@ -15,6 +18,23 @@
 #include "polygon.h"
 #include "expression.h"
 #include "unit.h"
+
+// Draws an arrowhead at `tip`, opening towards `from`. Both points are in device
+// (pixel) coordinates.
+static void drawArrowHead(QPainter &p, const QPointF &tip, const QPointF &from)
+{
+    static constexpr double headLength = 10;
+    static constexpr double headAngle = 25;   // degrees off the shaft
+    QLineF shaft(tip, from);
+    QLineF l1(tip, from);
+    l1.setLength(headLength);
+    l1.setAngle(shaft.angle() + headAngle);
+    QLineF l2(tip, from);
+    l2.setLength(headLength);
+    l2.setAngle(shaft.angle() - headAngle);
+    p.drawLine(l1);
+    p.drawLine(l2);
+}
 
 const QColor PCBView::backgroundColor = Qt::lightGray;
 const QColor PCBView::GNDColor = Qt::black;
@@ -27,6 +47,7 @@ PCBView::PCBView(QWidget *parent)
     : QWidget{parent}
 {
     list = nullptr;
+    labelList = nullptr;
     params = nullptr;
     laplace = nullptr;
     topLeft = QPointF(-1, 1);
@@ -41,6 +62,9 @@ PCBView::PCBView(QWidget *parent)
     snapToGrid = false;
     showPotential = false;
     keepAspectRatio = true;
+    showLabels = true;
+    fillContours = false;
+    labelTextSize = 14;
 }
 
 void PCBView::setCorners(QPointF topLeft, QPointF bottomRight)
@@ -54,6 +78,12 @@ void PCBView::setElementList(ElementList *list)
     this->list = list;
     // the previous selection belongs to the old list
     selectedElement = nullptr;
+}
+
+void PCBView::setLabelList(LabelList *labels)
+{
+    this->labelList = labels;
+    update();
 }
 
 void PCBView::setParameters(ParameterList *params)
@@ -115,6 +145,24 @@ void PCBView::setShowPotential(bool show)
 void PCBView::setKeepAspectRatio(bool keep)
 {
     keepAspectRatio = keep;
+    update();
+}
+
+void PCBView::setShowLabels(bool show)
+{
+    showLabels = show;
+    update();
+}
+
+void PCBView::setFillContours(bool fill)
+{
+    fillContours = fill;
+    update();
+}
+
+void PCBView::setLabelTextSize(int pixels)
+{
+    labelTextSize = pixels;
     update();
 }
 
@@ -205,6 +253,20 @@ void PCBView::paintEvent(QPaintEvent *event)
                 p.drawPolygon(poly);
             }
 
+            // optionally fill the closed contour with a translucent shade of the
+            // element colour; the outline is still drawn on top below
+            if(fillContours && vertices.size() >= 3) {
+                QPolygonF poly;
+                for(auto &v : vertices) {
+                    poly << transform.map(v);
+                }
+                QColor fillColor = elementColor;
+                fillColor.setAlpha(60);
+                p.setPen(Qt::NoPen);
+                p.setBrush(fillColor);
+                p.drawPolygon(poly);
+            }
+
             p.setBrush(elementColor);
             p.setPen(elementColor);
 
@@ -237,6 +299,62 @@ void PCBView::paintEvent(QPaintEvent *event)
                             stop = transform.map(snapToGridPoint(transform.inverted().map(stop)));
                         }
                         p.drawLine(start, stop);
+            }
+        }
+    }
+
+    // Show labels (text annotations and dimension arrows). Text is drawn in
+    // device space with a fixed pixel size so glyphs are not flipped by the
+    // view transform (which has a negative y-scale).
+    if(showLabels && labelList) {
+        QFont font = p.font();
+        font.setPixelSize(labelTextSize);
+        p.setFont(font);
+        QFontMetrics fm(font);
+        p.setBrush(Qt::NoBrush);
+        for(auto l : labelList->getLabels()) {
+            const auto &pts = l->getPoints();
+            p.setPen(Qt::black);
+            switch(l->getType()) {
+            case Label::Type::Text: {
+                if(pts.size() < 1) {
+                    break;
+                }
+                QPointF anchor = transform.map(pts[0]);
+                // centre the text (both axes) on the anchor point
+                QString txt = l->getText();
+                QRectF br = fm.boundingRect(txt);
+                QRectF rect(anchor.x() - br.width() / 2.0, anchor.y() - br.height() / 2.0,
+                            br.width(), br.height());
+                p.drawText(rect, Qt::AlignCenter, txt);
+                break;
+            }
+            case Label::Type::Dimension: {
+                if(pts.size() < 2) {
+                    break;
+                }
+                QPointF a = transform.map(pts[0]);
+                QPointF b = transform.map(pts[1]);
+                p.drawLine(a, b);
+                drawArrowHead(p, a, b);
+                drawArrowHead(p, b, a);
+                // place the text beside the middle of the arrow: above the line
+                // for a mostly-horizontal span, to the right for a vertical one
+                QPointF mid = (a + b) / 2;
+                QString txt = l->getText();
+                int tw = fm.horizontalAdvance(txt);
+                int th = fm.height();
+                QPointF textPos;
+                if(std::abs(b.x() - a.x()) >= std::abs(b.y() - a.y())) {
+                    textPos = QPointF(mid.x() - tw / 2.0, mid.y() - 4);
+                } else {
+                    textPos = QPointF(mid.x() + 6, mid.y() + th / 4.0);
+                }
+                p.drawText(textPos, txt);
+                break;
+            }
+            case Label::Type::Last:
+                break;
             }
         }
     }

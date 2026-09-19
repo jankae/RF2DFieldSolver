@@ -1,0 +1,277 @@
+{
+    "viewGrid": 0.0001,
+    "showPotential": true,
+    "showGrid": true,
+    "snapToGrid": true,
+    "viewMode": "Keep aspect ratio",
+    "showLabels": true,
+    "fillContours": true,
+    "labelTextSize": 14,
+    "simulationGrid": 4e-06,
+    "gaussDistance": 2e-05,
+    "tolerance": 1e-07,
+    "threads": 20,
+    "borderIsGND": true,
+    "xleft": -0.001,
+    "xright": 0.001,
+    "ytop": 0.0003,
+    "ybottom": -0.0003,
+    "xleftExpr": "-max(max(h1,h2)*5,(w+s/2)*3)",
+    "xrightExpr": "max(max(h1,h2)*5,(w+s/2)*3)",
+    "ytopExpr": "h1+0.1mm",
+    "ybottomExpr": "-h2-0.1mm",
+    "parameterList": {
+        "parameters": [
+            {
+                "name": "w",
+                "expression": "0.2mm"
+            },
+            {
+                "name": "t",
+                "expression": "35um"
+            },
+            {
+                "name": "s",
+                "expression": "0.2mm"
+            },
+            {
+                "name": "h1",
+                "expression": "0.2mm"
+            },
+            {
+                "name": "h2",
+                "expression": "0.2mm"
+            }
+        ]
+    },
+    "list": {
+        "elements": [
+            {
+                "name": "RF+",
+                "type": "Trace+",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-w-s/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s/2",
+                        "y": "0"
+                    },
+                    {
+                        "x": "-w-s/2",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "RF-",
+                "type": "Trace-",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "s/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "s/2+w",
+                        "y": "t"
+                    },
+                    {
+                        "x": "s/2+w",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s/2",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "Substrate above",
+                "type": "Dielectric",
+                "e_r": 4.1,
+                "vertices": [
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "Substrate below",
+                "type": "Dielectric",
+                "e_r": 4.1,
+                "vertices": [
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2"
+                    },
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2"
+                    }
+                ]
+            },
+            {
+                "name": "Top reference",
+                "type": "GND",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1+0.1mm"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1+0.1mm"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1"
+                    },
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "h1"
+                    }
+                ]
+            },
+            {
+                "name": "Bottom reference",
+                "type": "GND",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2"
+                    },
+                    {
+                        "x": "max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2-0.1mm"
+                    },
+                    {
+                        "x": "-max(max(h1,h2)*5,(w+s/2)*3)",
+                        "y": "-h2-0.1mm"
+                    }
+                ]
+            }
+        ]
+    },
+    "labels": {
+        "labels": [
+            {
+                "type": "Dimension",
+                "text": "w",
+                "points": [
+                    {
+                        "x": "-w-s/2",
+                        "y": "t+0.05mm"
+                    },
+                    {
+                        "x": "-s/2",
+                        "y": "t+0.05mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "s",
+                "points": [
+                    {
+                        "x": "-s/2",
+                        "y": "t+0.05mm"
+                    },
+                    {
+                        "x": "s/2",
+                        "y": "t+0.05mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "w",
+                "points": [
+                    {
+                        "x": "s/2",
+                        "y": "t+0.05mm"
+                    },
+                    {
+                        "x": "s/2+w",
+                        "y": "t+0.05mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "t",
+                "points": [
+                    {
+                        "x": "s/2+w+0.15mm",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s/2+w+0.15mm",
+                        "y": "t"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "h1",
+                "points": [
+                    {
+                        "x": "s/2+w+0.35mm",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s/2+w+0.35mm",
+                        "y": "h1"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "h2",
+                "points": [
+                    {
+                        "x": "s/2+w+0.35mm",
+                        "y": "-h2"
+                    },
+                    {
+                        "x": "s/2+w+0.35mm",
+                        "y": "0"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,301 @@
+{
+    "viewGrid": 0.0001,
+    "showPotential": true,
+    "showGrid": true,
+    "snapToGrid": true,
+    "viewMode": "Keep aspect ratio",
+    "showLabels": true,
+    "fillContours": true,
+    "labelTextSize": 14,
+    "simulationGrid": 4e-06,
+    "gaussDistance": 2e-05,
+    "tolerance": 1e-07,
+    "threads": 20,
+    "borderIsGND": true,
+    "xleft": -0.0012,
+    "xright": 0.0012,
+    "ytop": 0.001,
+    "ybottom": -0.0003,
+    "xleftExpr": "-max(h*5,(w+s1/2)*3,s2*4)",
+    "xrightExpr": "max(h*5,(w+s1/2)*3,s2*4)",
+    "ytopExpr": "h*5",
+    "ybottomExpr": "-h-0.1mm",
+    "parameterList": {
+        "parameters": [
+            {
+                "name": "w",
+                "expression": "0.3mm"
+            },
+            {
+                "name": "t",
+                "expression": "35um"
+            },
+            {
+                "name": "s1",
+                "expression": "0.2mm"
+            },
+            {
+                "name": "s2",
+                "expression": "0.3mm"
+            },
+            {
+                "name": "h",
+                "expression": "0.2mm"
+            }
+        ]
+    },
+    "list": {
+        "elements": [
+            {
+                "name": "RF+",
+                "type": "Trace+",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-w-s1/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s1/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s1/2",
+                        "y": "0"
+                    },
+                    {
+                        "x": "-w-s1/2",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "RF-",
+                "type": "Trace-",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "s1/2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "s1/2+w",
+                        "y": "t"
+                    },
+                    {
+                        "x": "s1/2+w",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s1/2",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "GND",
+                "type": "GND",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s1/2-w-s2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "-s1/2-w-s2",
+                        "y": "0"
+                    },
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "GND",
+                "type": "GND",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "s1/2+w+s2",
+                        "y": "t"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "t"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s1/2+w+s2",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "name": "Substrate",
+                "type": "Dielectric",
+                "e_r": 4.1,
+                "vertices": [
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "0"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h"
+                    },
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h"
+                    }
+                ]
+            },
+            {
+                "name": "GND",
+                "type": "GND",
+                "e_r": 4.3,
+                "vertices": [
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h"
+                    },
+                    {
+                        "x": "max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h-0.1mm"
+                    },
+                    {
+                        "x": "-max(h*5,(w+s1/2)*3,s2*4)",
+                        "y": "-h-0.1mm"
+                    }
+                ]
+            }
+        ]
+    },
+    "labels": {
+        "labels": [
+            {
+                "type": "Dimension",
+                "text": "s2",
+                "points": [
+                    {
+                        "x": "-s1/2-w-s2",
+                        "y": "t+0.15mm"
+                    },
+                    {
+                        "x": "-s1/2-w",
+                        "y": "t+0.15mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "w",
+                "points": [
+                    {
+                        "x": "-w-s1/2",
+                        "y": "t+0.15mm"
+                    },
+                    {
+                        "x": "-s1/2",
+                        "y": "t+0.15mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "s1",
+                "points": [
+                    {
+                        "x": "-s1/2",
+                        "y": "t+0.15mm"
+                    },
+                    {
+                        "x": "s1/2",
+                        "y": "t+0.15mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "w",
+                "points": [
+                    {
+                        "x": "s1/2",
+                        "y": "t+0.15mm"
+                    },
+                    {
+                        "x": "s1/2+w",
+                        "y": "t+0.15mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "s2",
+                "points": [
+                    {
+                        "x": "s1/2+w",
+                        "y": "t+0.15mm"
+                    },
+                    {
+                        "x": "s1/2+w+s2",
+                        "y": "t+0.15mm"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "t",
+                "points": [
+                    {
+                        "x": "s1/2+w+0.15mm",
+                        "y": "0"
+                    },
+                    {
+                        "x": "s1/2+w+0.15mm",
+                        "y": "t"
+                    }
+                ]
+            },
+            {
+                "type": "Dimension",
+                "text": "h",
+                "points": [
+                    {
+                        "x": "-s1/2-w-s2-0.25mm",
+                        "y": "-h"
+                    },
+                    {
+                        "x": "-s1/2-w-s2-0.25mm",
+                        "y": "0"
+                    }
+                ]
+            },
+            {
+                "type": "Text",
+                "text": "\u03b5r",
+                "points": [
+                    {
+                        "x": "0",
+                        "y": "-h/2"
+                    }
+                ]
+            }
+        ]
+    }
+}

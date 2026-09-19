@@ -2,6 +2,7 @@
 
 #include "expression.h"
 #include "unit.h"
+#include "CustomWidgets/informationbox.h"
 
 #include <QBrush>
 #include <QColor>
@@ -199,7 +200,31 @@ bool ParameterList::setData(const QModelIndex &index, const QVariant &value, int
     }
     Parameter &p = params[index.row()];
     switch((Column) index.column()) {
-    case Column::Name: p.name = value.toString(); break;
+    case Column::Name: {
+        QString newName = value.toString();
+        if(newName == p.name) {
+            return false;
+        }
+        // the name must be usable as an identifier in an expression and must not
+        // collide with a reserved function name
+        if(!Expression::isValidParameterName(newName)) {
+            InformationBox::ShowError("Invalid parameter name",
+                "\"" + newName + "\" cannot be used as a parameter name. Use a letter or "
+                "underscore followed by letters, digits or underscores, and avoid the "
+                "reserved function names (" + Expression::functionNames().join(", ") + ").");
+            return false;
+        }
+        // names must be unique so expressions resolve unambiguously
+        for(int i=0;i<params.size();i++) {
+            if(i != index.row() && params[i].name == newName) {
+                InformationBox::ShowError("Duplicate parameter name",
+                    "A parameter named \"" + newName + "\" already exists.");
+                return false;
+            }
+        }
+        p.name = newName;
+        break;
+    }
     case Column::Expression: p.expression = value.toString(); break;
     default: return false;
     }

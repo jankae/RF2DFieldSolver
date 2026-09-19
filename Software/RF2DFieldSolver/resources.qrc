@@ -8,5 +8,13 @@
         <file>images/coplanar_stripline_differential.png</file>
         <file>images/microstrip_differential.png</file>
         <file>images/stripline_differential.png</file>
+        <file>examples/microstrip.RF2Dproj</file>
+        <file>examples/differential_microstrip.RF2Dproj</file>
+        <file>examples/coplanar_microstrip.RF2Dproj</file>
+        <file>examples/coplanar_differential_microstrip.RF2Dproj</file>
+        <file>examples/stripline.RF2Dproj</file>
+        <file>examples/differential_stripline.RF2Dproj</file>
+        <file>examples/coplanar_stripline.RF2Dproj</file>
+        <file>examples/coplanar_differential_stripline.RF2Dproj</file>
     </qresource>
 </RCC>

@@ -5,6 +5,7 @@
 
 #include <QPointF>
 #include "elementlist.h"
+#include "labellist.h"
 #include "parameterlist.h"
 #include "laplace/laplace.h"
 
@@ -16,6 +17,7 @@ public:
 
     void setCorners(QPointF topLeft, QPointF bottomRight);
     void setElementList(ElementList *list);
+    void setLabelList(LabelList *labels);
     void setParameters(ParameterList *params);
     void setLaplace(Laplace *laplace);
     // Highlights the given element in the view (nullptr clears the highlight).
@@ -30,6 +32,13 @@ public:
     void setSnapToGrid(bool snap);
     void setShowPotential(bool show);
     void setKeepAspectRatio(bool keep);
+    void setShowLabels(bool show);
+    void setFillContours(bool fill);
+    void setLabelTextSize(int pixels);
+
+    bool getShowLabels() const {return showLabels;}
+    bool getFillContours() const {return fillContours;}
+    int getLabelTextSize() const {return labelTextSize;}
 
     QPointF getTopLeft() const;
 
@@ -77,6 +86,7 @@ private:
     QPointF bottomRight;
     QTransform transform;
     ElementList *list;
+    LabelList *labelList;
     ParameterList *params;
     Laplace *laplace;
 
@@ -94,6 +104,9 @@ private:
     bool snapToGrid;
     bool showPotential;
     bool keepAspectRatio;
+    bool showLabels;
+    bool fillContours;
+    int labelTextSize;
 };
 
 #endif // PCBVIEW_H
