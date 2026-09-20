@@ -69,7 +69,8 @@ bool SIUnitEdit::eventFilter(QObject *, QEvent *event)
         if (!(mod & Qt::ShiftModifier)) {
             key = tolower(key);
         }
-        if(key <= 255) {
+	// Exclude the m prefix so that imperial units (i.e. mil) can be entered
+        if(key <= 255 && key != 'm') {
             if (prefixes.indexOf(static_cast<QChar>(key)) >= 0) {
                 // a valid prefix key was pressed
                 parseNewValue(Unit::SIPrefixToFactor(key));
@@ -159,15 +160,34 @@ void SIUnitEdit::parseNewValue(double factor)
         setValueQuiet(_value);
         emit editingAborted();
     } else {
-        // remove optional unit
-        if(input.endsWith(unit)) {
-            input.chop(unit.size());
-        }
-        auto lastChar = input.at(input.size()-1).toLatin1();
-        if(prefixes.indexOf(lastChar) >= 0) {
-            factor = Unit::SIPrefixToFactor(lastChar);
-            input.chop(1);
-        }
+	// Handle mil and oz imperial units
+	if(input.endsWith("mil")) {
+		input.chop(3);
+		factor = 25.4 / 1000000;
+	} else if(input.endsWith("oz")) {
+		input.chop(2);
+		factor = 35.0 / 1000000;
+	} else {
+            auto lastChar = input.at(input.size()-1).toLatin1();
+            auto lastCharPrefix = input.size() > 1
+                                  ? input.at(input.size()-2).toLatin1()
+                                  : '\0';
+            // remove optional unit
+            //
+            // there's some ambiguity in the case of a numeric value ending
+            // with the single alpha character of m which could be either
+            // a SI prefix or a unit ... treat it as a SI prefix to match
+            // the previous behaviour of eventFilter.
+            if(input.endsWith(unit)
+               && (lastChar != 'm' || isalpha(lastCharPrefix))) {
+                input.chop(unit.size());
+                lastChar = input.at(input.size()-1).toLatin1();
+            }
+            if(prefixes.indexOf(lastChar) >= 0) {
+                factor = Unit::SIPrefixToFactor(lastChar);
+                input.chop(1);
+            }
+	}
         // remaining input should only contain numbers
         bool conversion_ok;
         auto v = input.toDouble(&conversion_ok);
