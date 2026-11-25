@@ -51,11 +51,20 @@ private:
     // Evaluates the (optional) area-bound expressions against the current
     // parameters and pushes the results into the area fields.
     void applyAreaExpressions();
+    // Applies the simulation settings from the UI (area, grid, threads,
+    // tolerance, borders) to a Laplace solver.
+    void configureLaplace(Laplace &l);
     Ui::MainWindow *ui;
     ElementList *list;
     LabelList *labels;
     ParameterList *params;
-    Laplace laplace;
+    // Two field solutions are needed for the quasi-static method:
+    //  - laplace:    with all dielectrics           -> C  (and the field shown in the view)
+    //  - laplaceAir: every eps_r = 1 (vacuum)       -> C0 -> L = 1/(c^2 * C0)
+    // C0 can NOT be taken from the dielectric solution: a dielectric changes
+    // where the field goes, not just its strength (bound charges at the
+    // dielectric/air interfaces), so the E-flux of that solution is not C0/e0.
+    Laplace laplace, laplaceAir;
     Gauss gauss;
     // View menu actions kept so their state can be restored from a project file.
     QAction *actShowLabels;

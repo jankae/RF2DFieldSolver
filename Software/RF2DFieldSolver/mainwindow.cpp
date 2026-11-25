@@ -360,6 +360,30 @@ MainWindow::MainWindow(QWidget *parent)
     // connections for the calculations
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::startCalculation);
 
+    // Step 1 of 2: vacuum solve (all eps_r = 1), progress 0..49 %.
+    // When it is done, start step 2, the solve with dielectrics.
+    laplaceAir.setIgnoreDielectric(true);
+    connect(&laplaceAir, &Laplace::info, this, &MainWindow::info);
+    connect(&laplaceAir, &Laplace::warning, this, &MainWindow::warning);
+    connect(&laplaceAir, &Laplace::error, this, &MainWindow::error);
+    connect(&laplaceAir, &Laplace::calculationDone, this, [=](){
+        disconnect(&laplaceAir, &Laplace::percentage, this, nullptr);
+        disconnect(ui->abort, nullptr, &laplaceAir, nullptr);
+
+        connect(&laplace, &Laplace::percentage, this, [=](int percent){
+            constexpr int minPercent = 50;
+            constexpr int maxPercent = 99;
+            ui->progress->setValue(percent * (maxPercent-minPercent) / 100 + minPercent);
+        });
+        connect(ui->abort, &QPushButton::clicked, &laplace, &Laplace::abortCalculation);
+
+        // Step 2 of 2: solve with dielectrics
+        configureLaplace(laplace);
+        laplace.startCalculation(list);
+        ui->view->update();
+    });
+
+    // Step 2 done: both solutions are available, evaluate C0 (vacuum) and C (dielectric)
     connect(&laplace, &Laplace::info, this, &MainWindow::info);
     connect(&laplace, &Laplace::warning, this, &MainWindow::warning);
     connect(&laplace, &Laplace::error, this, &MainWindow::error);
@@ -370,15 +394,17 @@ MainWindow::MainWindow(QWidget *parent)
 
         ui->view->update();
         // start gauss calculation
+        // C0 from the separate vacuum solution (laplaceAir), not from the
+        // dielectric solution (see the comment at laplaceAir in mainwindow.h)
         info("Starting gauss integration for charge without dielectric");
         double chargeSumP = 0, chargeSumN = 0;
         for(auto e : list->getElements()) {
             switch(e->getType()) {
             case Element::Type::TracePos:
-                chargeSumP += Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
+                chargeSumP += Gauss::getCharge(&laplaceAir, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::TraceNeg:
-                chargeSumN -= Gauss::getCharge(&laplace, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
+                chargeSumN -= Gauss::getCharge(&laplaceAir, nullptr, e, ui->resolution->value(), ui->gaussDistance->value());
                 break;
             case Element::Type::GND:
             case Element::Type::Dielectric:
@@ -442,6 +468,7 @@ MainWindow::MainWindow(QWidget *parent)
     };
 
     connect(&laplace, &Laplace::calculationAborted, this, calculationAborted);
+    connect(&laplaceAir, &Laplace::calculationAborted, this, calculationAborted);
 
     // Examples: browse and load built-in parameterised example projects
     connect(ui->actionBrowseExamples, &QAction::triggered, this, [=](){
@@ -707,21 +734,27 @@ void MainWindow::startCalculation()
         }
     }
 
-    connect(&laplace, &Laplace::percentage, this, [=](int percent){
+    connect(&laplaceAir, &Laplace::percentage, this, [=](int percent){
         constexpr int minPercent = 0;
-        constexpr int maxPercent = 99;
+        constexpr int maxPercent = 49;
         ui->progress->setValue(percent * (maxPercent-minPercent) / 100 + minPercent);
     });
-    connect(ui->abort, &QPushButton::clicked, &laplace, &Laplace::abortCalculation);
+    connect(ui->abort, &QPushButton::clicked, &laplaceAir, &Laplace::abortCalculation);
 
-    // Start the dielectric laplace calculation
-    laplace.setArea(ui->view->getTopLeft(), ui->view->getBottomRight());
-    laplace.setGrid(ui->resolution->value());
-    laplace.setThreads(ui->threads->value());
-    laplace.setThreshold(ui->tolerance->value());
-    laplace.setGroundedBorders(ui->borderIsGND->isChecked());
-    laplace.startCalculation(list);
+    // Start with the vacuum laplace calculation, the dielectric one follows
+    // when it is done (see laplaceAir calculationDone in the constructor)
+    configureLaplace(laplaceAir);
+    laplaceAir.startCalculation(list);
     ui->view->update();
+}
+
+void MainWindow::configureLaplace(Laplace &l)
+{
+    l.setArea(ui->view->getTopLeft(), ui->view->getBottomRight());
+    l.setGrid(ui->resolution->value());
+    l.setThreads(ui->threads->value());
+    l.setThreshold(ui->tolerance->value());
+    l.setGroundedBorders(ui->borderIsGND->isChecked());
 }
 
 void MainWindow::calculationStopped()
