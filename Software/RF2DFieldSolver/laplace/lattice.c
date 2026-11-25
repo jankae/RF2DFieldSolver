@@ -226,6 +226,26 @@ void lattice_apply_weight(struct lattice* lattice, weight_t func, void *ptr) {
 #define GETFORMULA_INV_CORNER_4 (  v1*w1+2*v2*w2+  v3*w3+2*v4*w4)/(w1+2*w2+w3+2*w4)
 
 /**
+ * Weight of the neighbour cell IDX as seen from the free cell CELL.
+ *
+ * The update v0 = sum(wi*vi) / sum(wi) with wi = sqrt(eps_i) gives every
+ * face between two cells the coefficient w0*wi = sqrt(eps_0 * eps_i).
+ *
+ * Conductor (Dirichlet) cells have no meaningful permittivity: the weight
+ * function reports eps = 1 for points inside traces/GND. Using that value
+ * would give every face that touches a conductor sqrt(eps_r * 1) instead of
+ * eps_r, i.e. a thin "air skin" (about half a cell) around every conductor.
+ * This lowers C, makes a homogeneous stripline report eps_eff < eps_r and
+ * the error grows with the grid size.
+ *
+ * Fix: a conductor neighbour takes the weight of the free cell itself, so
+ * the face between a dielectric cell and a conductor gets the dielectric's
+ * eps_r (sqrt(eps_0 * eps_0) = eps_0).
+ */
+#define NEIGHBOUR_WEIGHT(CELL,IDX) \
+    ((lattice->cells[IDX].cond == DIRICHLET) ? (CELL)->weight : lattice->cells[IDX].weight)
+
+/**
  * This macro generates function for the supported configurations.
  * Even though not each function needs all the adjacent point, the
  * compiler should optimize away points that are not needed.
@@ -242,10 +262,10 @@ double func_##NUM##_##IDX (struct lattice* lattice, struct cell* cell) {\
     double v3 = lattice->cells[i3].value; \
     double v4 = lattice->cells[i4].value; \
                                           \
-    double w1 = lattice->cells[i1].weight;\
-    double w2 = lattice->cells[i2].weight;\
-    double w3 = lattice->cells[i3].weight;\
-    double w4 = lattice->cells[i4].weight;\
+    double w1 = NEIGHBOUR_WEIGHT(cell, i1);\
+    double w2 = NEIGHBOUR_WEIGHT(cell, i2);\
+    double w3 = NEIGHBOUR_WEIGHT(cell, i3);\
+    double w4 = NEIGHBOUR_WEIGHT(cell, i4);\
                                           \
     (void)v1;(void)v2;(void)v3;(void)v4;  \
     (void)w1;(void)w2;(void)w3;(void)w4;  \
