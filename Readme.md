@@ -38,7 +38,7 @@ The real use case is the simulation of non-standard elements. But creating the s
 
 ## How does the calculation work?
 
-The first step of the solver is calculating the potential for every point in the plane. This is done with the Laplace equation and [this](https://github.com/gpollo/laplace) library. In the next step, the charge on each RF conductor is determined by calculating the Gauss integral around it (integrating the field lines going in to the conductor). The Gauss integral is calculated twice, once with the dielectric constant and once without the dielectric constant (assumes air around the conductors). Based on [these](https://eng.libretexts.org/Bookshelves/Electrical_Engineering/Electronics/Microwave_and_RF_Design_II_-_Transmission_Lines_(Steer)/03%3A_Planar_Transmission_Lines/3.05%3A_Microstrip_Transmission_Lines) formulas, the line constants (capacitance/meter and inductance/meter) can be determined which ultimately allow calculating the impedance as well.
+The first step of the solver is calculating the potential for every point in the plane. This is done with the Laplace equation and [this](https://github.com/gpollo/laplace) library. In the next step, the charge on each RF conductor is determined by calculating the Gauss integral around it (integrating the field lines going in to the conductor). Both steps are done twice: once with the dielectrics and once with all dielectrics replaced by air. Based on [these](https://eng.libretexts.org/Bookshelves/Electrical_Engineering/Electronics/Microwave_and_RF_Design_II_-_Transmission_Lines_(Steer)/03%3A_Planar_Transmission_Lines/3.05%3A_Microstrip_Transmission_Lines) formulas, the line constants (capacitance/meter and inductance/meter) can be determined which ultimately allow calculating the impedance as well.
 
 ## Comparison to other calculators
 How do the results from this field solver compare to other calculators? Here are some very simple scenarios with calculated impedances from different tools:
@@ -78,7 +78,7 @@ How do the results from this field solver compare to other calculators? Here are
 ### Results
 |     Calculator      |    Microstrip    |    Stripline   |    Asymmetrical stripline   |
 | :-----------------: | :--------------: | :------------: | :-------------------------: |
-| RF 2D Field Solver  |  55.5 &Omega;    |  49.4 &Omega;  |  50.7 &Omega;               |
+| RF 2D Field Solver  |  55.3 &Omega;    |  48.7 &Omega;  |  49.0 &Omega;               |
 | All About Circuits  |  55.2 &Omega;    |  49.3 &Omega;  |  47.5 &Omega; (different &epsilon;_r not possible, using 4.0 for both)  |
 | PCBWay              |  55.3 &Omega;    |  49.3 &Omega;  |  Not possible               |
 | Pasternack          |  58.3 &Omega;    |  49.6 &Omega;  |  Not possible               |
